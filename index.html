@@ -13,7 +13,7 @@
 })();
 
 </script>
-<title>Emotion Engine — Virtual Friend [5.6.0] CDP v2 + roomba pets + seamless loops</title>
+<title>Emotion Engine beta</title>
 <style>
 @font-face {
   font-family: 'Pixellari';
@@ -544,7 +544,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
   position:relative;
   border:2px solid #b0a898;
   image-rendering:pixelated;
-  max-width:min(78vw, 346px);
+  width:min(90vw, 420px);
+  max-width:min(90vw, 420px);
   overflow:hidden;
   isolation:isolate;
   opacity:0.6;
@@ -581,9 +582,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 }
 #synth-canvas {
   display:block;
-  width:min(62vw, 332px);
+  width:100%;
   height:auto;
-  aspect-ratio:184/118;
+  aspect-ratio:224/132;
   image-rendering:pixelated;
   border:0;
   outline:none;
@@ -9726,6 +9727,8 @@ var SYNTH_NOTES = [
   {note:'E5', freq:659.25, white:true,  kb:';'},
 ];
 var SYNTH_PRESETS = [
+  { name:'PINO',  type:'piano',   attack:0.005,decay:1.8, sustain:0,   release:0.4, detune:0,    gain:0.34 },
+  { name:'RHDS',  type:'rhodes',  attack:0.01, decay:2.2, sustain:0.4, release:0.7, detune:0,    gain:0.16 },
   { name:'KEYS',  type:'square',  attack:0.01, decay:0.3, sustain:0.4, release:0.4, detune:0,    gain:0.082 },
   { name:'BASS',  type:'sawtooth',attack:0.02, decay:0.5, sustain:0.6, release:0.6, detune:-2400, gain:0.102 },
   { name:'LEAD',  type:'sawtooth',attack:0.02, decay:0.4, sustain:0.7, release:0.5, detune:0,    gain:0.14, saw:true },
@@ -10545,19 +10548,19 @@ const GRAPHICS_QUALITY_KEY='sm_graphics_quality_v1';
 const GRAPHICS_PRESETS={
   low: {
     label:'low',
-    renderScale:0.58, pixelRatio:0.75, colorLevels:18, dither:0.08, ditherScale:3,
+    renderScale:0.65, pixelRatio:0.85, colorLevels:18, dither:0.08, ditherScale:3,
     bloom:0, bloomRadius:4, dof:0, dofFocus:0.23, vignette:0.22, desaturate:0.06,
     crtCurve:0, globalPixel:0, uiPixelate:1, globalUIPixel:1, shadows:false
   },
   med: {
     label:'med',
-    renderScale:0.55, pixelRatio:0.7, colorLevels:16, dither:0.10, ditherScale:3,
+    renderScale:0.65, pixelRatio:0.85, colorLevels:18, dither:0.10, ditherScale:3,
     bloom:0.06, bloomRadius:8, dof:0, dofFocus:0.23, vignette:0.24, desaturate:0.08,
     crtCurve:0, globalPixel:0, uiPixelate:3, globalUIPixel:1, shadows:true
   },
   high: {
     label:'high',
-    renderScale:0.65, pixelRatio:0.85, colorLevels:18, dither:0.14, ditherScale:3,
+    renderScale:0.70, pixelRatio:0.95, colorLevels:18, dither:0.14, ditherScale:3,
     bloom:0.16, bloomRadius:12, dof:0.50, dofFocus:0.23, vignette:0.34, desaturate:0.10,
     crtCurve:0, globalPixel:0, uiPixelate:3, globalUIPixel:1, shadows:true
   }
@@ -12835,14 +12838,51 @@ synthPreset = 0; // 0=keys, 1=bass, 2=lead
 synthActiveNodes = {};
 var synthKnobs = window.synthKnobs || { cutoff:0.68, resonance:0.18, level:0.72 };
 window.synthKnobs = synthKnobs;
+var synthTapeActive = window.synthTapeActive || false;
+window.synthTapeActive = synthTapeActive;
+function synthToggleTape(){
+  synthTapeActive = !synthTapeActive;
+  window.synthTapeActive = synthTapeActive;
+  const out = getSynthOutputChainRef();
+  const ctx = out ? out.ctx : null;
+  if (out && ctx) {
+    if (synthTapeActive) {
+      // Restore tape wet and open send gate
+      if(out.tapeWet) out.tapeWet.gain.setValueAtTime(0.72, ctx.currentTime);
+      out.tapeSend.gain.setTargetAtTime(1.0, ctx.currentTime, 0.06);
+      out.tapeFeedback.gain.setValueAtTime(0.76, ctx.currentTime);
+    } else {
+      // Hard kill: zero everything in the loop, brief master mute for clean cut
+      out.tapeSend.gain.cancelScheduledValues(ctx.currentTime);
+      out.tapeSend.gain.setValueAtTime(0, ctx.currentTime);
+      out.tapeFeedback.gain.cancelScheduledValues(ctx.currentTime);
+      out.tapeFeedback.gain.setValueAtTime(0, ctx.currentTime);
+      if(out.tapeWet){
+        out.tapeWet.gain.cancelScheduledValues(ctx.currentTime);
+        out.tapeWet.gain.setValueAtTime(0, ctx.currentTime);
+        // Restore tapeWet after delay buffer drains (silence, not a signal path)
+        setTimeout(()=>{ if(out.tapeWet) out.tapeWet.gain.value = 0.72; }, 300);
+      }
+      // Brief master mute — tape splice feel, clears the moment
+      if(out.master){
+        const baseGain = out.master.gain.value;
+        out.master.gain.cancelScheduledValues(ctx.currentTime);
+        out.master.gain.setValueAtTime(0, ctx.currentTime);
+        out.master.gain.linearRampToValueAtTime(baseGain, ctx.currentTime + 0.07);
+      }
+    }
+  }
+  synthApplyKnobValues();
+  synthMarkDirty(); synthDraw();
+}
 function synthGetKnobState(){
   if(!window.synthKnobs || typeof window.synthKnobs !== 'object'){
-    window.synthKnobs = { cutoff:0.68, resonance:0.18, level:0.72, reverb:0.14 };
+    window.synthKnobs = { cutoff:0.68, time:0.25, level:0.72, reverb:0.14 };
   }
   synthKnobs = window.synthKnobs;
   if(!Number.isFinite(synthKnobs.cutoff)) synthKnobs.cutoff = 0.68;
-  if(!Number.isFinite(synthKnobs.resonance)) synthKnobs.resonance = 0.18;
-  if(!Number.isFinite(synthKnobs.level)) synthKnobs.level = 0.72;
+  if(!Number.isFinite(synthKnobs.time))   synthKnobs.time   = 0.25; // migrate from old 'resonance' saves
+  if(!Number.isFinite(synthKnobs.level))  synthKnobs.level  = 0.72;
   if(!Number.isFinite(synthKnobs.reverb)) synthKnobs.reverb = 0.14;
   return synthKnobs;
 }
@@ -12869,6 +12909,8 @@ SYNTH_NOTES = [
 ];
 
 SYNTH_PRESETS = [
+  { name:'PINO',  type:'piano',   attack:0.005,decay:1.8, sustain:0,   release:0.4, detune:0,    gain:0.34 },
+  { name:'RHDS',  type:'rhodes',  attack:0.01, decay:2.2, sustain:0.4, release:0.7, detune:0,    gain:0.16 },
   { name:'KEYS',  type:'square',  attack:0.01, decay:0.3, sustain:0.4, release:0.4, detune:0,    gain:0.082 },
   { name:'BASS',  type:'sawtooth',attack:0.02, decay:0.5, sustain:0.6, release:0.6, detune:-2400, gain:0.102 },
   { name:'LEAD',  type:'sawtooth',attack:0.02, decay:0.4, sustain:0.7, release:0.5, detune:0,    gain:0.14, saw:true },
@@ -12883,69 +12925,84 @@ function synthGetCtx() {
   return synthAudioCtx;
 }
 var synthOutputChain = window.synthOutputChain || null;
+function synthMakeReverb(ctx, duration, decay){
+  const len = ctx.sampleRate * duration;
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for(let ch=0; ch<2; ch++){
+    const d = buf.getChannelData(ch);
+    for(let i=0; i<len; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/len, decay*3);
+  }
+  return buf;
+}
 function synthGetOutput(){
   const ctx = synthGetCtx();
   synthOutputChain = getSynthOutputChainRef();
   if (!synthOutputChain || synthOutputChain.ctx !== ctx) {
     const hp = ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 120;
-    hp.Q.value = 0.45;
+    hp.type = 'highpass'; hp.frequency.value = 120; hp.Q.value = 0.45;
     const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 3200;
-    lp.Q.value = 0.55;
+    lp.type = 'lowpass'; lp.frequency.value = 3200; lp.Q.value = 0.6;
     const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -24;
-    comp.knee.value = 18;
-    comp.ratio.value = 3;
-    comp.attack.value = 0.01;
-    comp.release.value = 0.18;
-    const delay = ctx.createDelay(0.45);
-    delay.delayTime.value = 0.18;
-    const feedback = ctx.createGain();
-    feedback.gain.value = 0.18;
-    const wet = ctx.createGain();
-    wet.gain.value = 0.08;
+    comp.threshold.value = -24; comp.knee.value = 18; comp.ratio.value = 3;
+    comp.attack.value = 0.01; comp.release.value = 0.18;
+    // preMix collects dry + tape before volume fader
+    const preMix = ctx.createGain(); preMix.gain.value = 1.0;
+    // master = volume fader
     const master = ctx.createGain();
-    master.gain.value = (synthMode === 'game') ? 0.48 : 0.34;
-    hp.connect(lp);
-    lp.connect(comp);
-    comp.connect(master);
-    comp.connect(delay);
-    delay.connect(feedback);
-    feedback.connect(delay);
-    delay.connect(wet);
-    wet.connect(master);
-    master.connect(ctx.destination);
-    synthOutputChain = { ctx, hp, lp, comp, delay, feedback, wet, master };
+    master.gain.value = (synthMode === 'game') ? 0.6 : 0.45;
+    hp.connect(lp); lp.connect(comp); comp.connect(preMix);
+    // ── Tape loop chain (feeds into preMix) ──
+    const tapeSend = ctx.createGain(); tapeSend.gain.value = 0;
+    const tapeDelay = ctx.createDelay(13.0); tapeDelay.delayTime.value = 2.0;
+    const tapeFeedback = ctx.createGain(); tapeFeedback.gain.value = 0.76;
+    const tapeLPF = ctx.createBiquadFilter();
+    tapeLPF.type = 'lowpass'; tapeLPF.frequency.value = 2200;
+    const tapeWet = ctx.createGain(); tapeWet.gain.value = 0.72;
+    comp.connect(tapeSend);
+    tapeSend.connect(tapeDelay);
+    tapeDelay.connect(tapeLPF); tapeLPF.connect(tapeFeedback); tapeFeedback.connect(tapeDelay);
+    tapeDelay.connect(tapeWet); tapeWet.connect(preMix);
+    preMix.connect(master);
+    // ── Reverb LAST — post volume, post loop ──
+    const reverbConv = ctx.createConvolver();
+    reverbConv.buffer = synthMakeReverb(ctx, 6.0, 0.42);
+    const reverbWet = ctx.createGain(); reverbWet.gain.value = 0;
+    const postDry = ctx.createGain(); postDry.gain.value = 1.0;
+    master.connect(postDry); postDry.connect(ctx.destination);
+    master.connect(reverbConv); reverbConv.connect(reverbWet); reverbWet.connect(ctx.destination);
+    synthOutputChain = { ctx, hp, lp, comp, preMix, master, postDry, reverbConv, reverbWet, tapeSend, tapeDelay, tapeFeedback, tapeLPF, tapeWet };
     window.synthOutputChain = synthOutputChain;
   }
   synthApplyKnobValues();
   return synthOutputChain;
 }
 function synthApplyKnobValues(){
-  const out=getSynthOutputChainRef();
+  const out = getSynthOutputChainRef();
   if(!out) return;
-  const k=synthGetKnobState();
-  if(out.lp){
-    out.lp.frequency.value = 420 + (k.cutoff||0) * 5980;
-    out.lp.Q.value = 0.45 + (k.resonance||0) * 10.5;
-  }
+  const k = synthGetKnobState();
+  if(out.lp) out.lp.frequency.value = 420 + (k.cutoff||0) * 5980;
   if(out.master){
-    const base=(synthMode === 'game') ? 0.36 : 0.24;
-    const range=(synthMode === 'game') ? 0.17 : 0.14;
+    // Wide volume range: 0.06 (whisper) → 1.4 (loud)
+    const base = (synthMode === 'game') ? 0.2 : 0.06;
+    const range = (synthMode === 'game') ? 0.8 : 1.34;
     out.master.gain.value = base + Math.max(0, Math.min(1, k.level||0)) * range;
   }
-  if(out.delay){
-    out.delay.delayTime.value = 0.08 + Math.max(0, Math.min(1, k.reverb||0)) * 0.26;
+  // VERB post-loop: equal-power wet/dry crossfade.
+  // At max reverb the dry path is fully gone, with a wet lift so volume stays present.
+  if(out.reverbWet){
+    const rv = Math.max(0, Math.min(1, k.reverb||0));
+    const dryGain = Math.cos(rv * Math.PI * 0.5);
+    const wetGain = Math.sin(rv * Math.PI * 0.5) * 1.35;
+    out.reverbWet.gain.value = wetGain;
+    if(out.postDry) out.postDry.gain.value = dryGain;
   }
-  if(out.feedback){
-    out.feedback.gain.value = 0.06 + Math.max(0, Math.min(1, k.reverb||0)) * 0.34;
+  // TIME → tape loop delay (low=long 4s, high=short 0.35s), only when active
+  if(out.tapeDelay && synthTapeActive){
+    const t = Math.max(0, Math.min(1, k.time||0));
+    out.tapeDelay.delayTime.value = 12.0 - t * 11.65;
   }
-  if(out.wet){
-    out.wet.gain.value = Math.max(0, Math.min(1, k.reverb||0)) * ((synthMode === 'game') ? 0.22 : 0.16);
-  }
+  // Tape feedback fixed at 0.75 — decays noticeably each loop, never runs away
+  if(out.tapeFeedback) out.tapeFeedback.gain.value = synthTapeActive ? 0.76 : 0;
 }
 function synthRefreshModeGain(){
   synthApplyKnobValues();
@@ -12967,6 +13024,68 @@ function synthPlayNote(noteStr, freq) {
     src.connect(gain); gain.connect(synthGetOutput().hp);
     src.start(); synthActiveNodes[noteStr] = { src, gain };
     return;
+  }
+
+  // Piano — harmonic additive: triangle + octave sine, percussive envelope
+  if (p.type === 'piano') {
+    const out = synthGetOutput();
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator(); osc1.type = 'triangle'; osc1.frequency.value = freq;
+    const osc2 = ctx.createOscillator(); osc2.type = 'sine';     osc2.frequency.value = freq * 2.0;
+    const osc3 = ctx.createOscillator(); osc3.type = 'sine';     osc3.frequency.value = freq * 3.0;
+    const mix = ctx.createGain(); mix.gain.value = 0.65;
+    const g2  = ctx.createGain(); g2.gain.value  = 0.25;
+    const g3  = ctx.createGain(); g3.gain.value  = 0.10;
+    osc1.connect(mix); osc2.connect(g2); g2.connect(mix); osc3.connect(g3); g3.connect(mix);
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(p.gain, now + 0.006);
+    gainNode.gain.exponentialRampToValueAtTime(p.gain * 0.28, now + 0.22);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+    mix.connect(gainNode); gainNode.connect(out.hp);
+    osc1.start(now); osc2.start(now); osc3.start(now);
+    osc1.stop(now + 2.5); osc2.stop(now + 2.5); osc3.stop(now + 2.5);
+    synthActiveNodes[noteStr] = { osc: osc1, osc2, osc3, gainNode };
+    synthMarkDirty(); synthDraw(); return;
+  }
+
+  // Rhodes — smooth suitcase tone. Minimal FM for color, mostly blended sines.
+  // Very low modIndex keeps it round. Two slightly detuned voices add warmth/chorus.
+  if (p.type === 'rhodes') {
+    const out = synthGetOutput();
+    const now = ctx.currentTime;
+    // Tiny FM: just enough to add that characteristic gentle shimmer
+    const modIndex = 1.8;
+    const modOsc = ctx.createOscillator(); modOsc.type = 'sine'; modOsc.frequency.value = freq;
+    const modGain = ctx.createGain();
+    modGain.gain.setValueAtTime(modIndex * freq, now);
+    modGain.gain.exponentialRampToValueAtTime(modIndex * freq * 0.12, now + 1.4);
+    modGain.gain.exponentialRampToValueAtTime(0.001, now + 5.0);
+    modOsc.connect(modGain);
+    // FM carrier
+    const carrier = ctx.createOscillator(); carrier.type = 'sine'; carrier.frequency.value = freq;
+    modGain.connect(carrier.frequency);
+    // Second voice — slightly detuned for warmth, no FM
+    const voice2 = ctx.createOscillator(); voice2.type = 'sine'; voice2.frequency.value = freq * 1.003;
+    const v2gain = ctx.createGain(); v2gain.gain.value = 0.55;
+    voice2.connect(v2gain);
+    // Sub body — half-freq sine for weight
+    const subOsc = ctx.createOscillator(); subOsc.type = 'sine'; subOsc.frequency.value = freq * 0.5;
+    const subGain = ctx.createGain(); subGain.gain.value = 0.18;
+    subOsc.connect(subGain);
+    const mix = ctx.createGain(); mix.gain.value = 0.72;
+    carrier.connect(mix); v2gain.connect(mix); subGain.connect(mix);
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(p.gain, now + 0.022); // soft attack
+    gainNode.gain.exponentialRampToValueAtTime(p.gain * 0.78, now + 1.2); // long gentle bloom
+    gainNode.gain.exponentialRampToValueAtTime(p.gain * 0.60, now + 4.0);
+    mix.connect(gainNode); gainNode.connect(out.hp);
+    modOsc.start(now); carrier.start(now); voice2.start(now); subOsc.start(now);
+    const stop = now + 5.5;
+    modOsc.stop(stop); carrier.stop(stop); voice2.stop(stop); subOsc.stop(stop);
+    synthActiveNodes[noteStr] = { osc: carrier, osc2: modOsc, osc3: voice2, gainNode };
+    synthMarkDirty(); synthDraw(); return;
   }
 
   // Synth oscillator
@@ -13069,10 +13188,37 @@ function synthTriggerTransient(noteStr, opts={}) {
 
 var synthKbMap = window.synthKbMap || {};
 SYNTH_NOTES.forEach(n => { synthKbMap[n.kb] = n; });
+
+// Extended keyboard range — no visual keys, just keyboard triggers
+const SYNTH_EXTENDED_KEYS = [
+  // Z row — C3 octave (one full octave below current)
+  {note:'C3', freq:130.81, kb:'z'},
+  {note:'D3', freq:146.83, kb:'x'},
+  {note:'E3', freq:164.81, kb:'c'},
+  {note:'F3', freq:174.61, kb:'v'},
+  {note:'G3', freq:196.00, kb:'b'},
+  {note:'A3', freq:220.00, kb:'n'},
+  {note:'B3', freq:246.94, kb:'m'},
+  // Q row (free keys only — w/e/t/y/u/o/p already used as black keys)
+  // q, r, i give us F5, G5, A5
+  {note:'F5', freq:698.46, kb:'q'},
+  {note:'G5', freq:783.99, kb:'r'},
+  {note:'A5', freq:880.00, kb:'i'},
+  // Number row — full upper octave C5–B5 (1–7) + C6 (8)
+  {note:'C5', freq:523.25, kb:'1'},
+  {note:'D5', freq:587.33, kb:'2'},
+  {note:'E5', freq:659.25, kb:'3'},
+  {note:'F5', freq:698.46, kb:'4'},
+  {note:'G5', freq:783.99, kb:'5'},
+  {note:'A5', freq:880.00, kb:'6'},
+  {note:'B5', freq:987.77, kb:'7'},
+  {note:'C6', freq:1046.50, kb:'8'},
+];
+SYNTH_EXTENDED_KEYS.forEach(n => { synthKbMap[n.kb] = n; });
 window.synthKbMap = synthKbMap;
 
 var synthUI = window.synthUI || {
-  width: 196,
+  width: 224,
   height: 132,
   canvas: null,
   ctx: null,
@@ -13093,7 +13239,7 @@ window.synthUI = synthUI;
 function getSynthUI(){
   if (!window.synthUI) {
     window.synthUI = {
-      width: 196,
+      width: 224,
       height: 132,
       canvas: null,
       ctx: null,
@@ -13249,24 +13395,28 @@ function synthBuildKeys() {
   const ui = getSynthUI();
   const whiteStartX = 8;
   const whiteY = 66;
-  const whiteW = 13;
+  const whiteW = 14;
   const whiteH = 56;
-  const blackW = 8;
-  const blackH = 30;
+  const blackW = 9;
+  const blackH = 32;
   ui.whiteKeys = [];
   ui.blackKeys = [];
   ui.presetRects = [
-    { x: 8, y: 36, w: 30, h: 12, idx: 0 },
-    { x: 42, y: 36, w: 30, h: 12, idx: 1 },
-    { x: 76, y: 36, w: 30, h: 12, idx: 2 },
+    { x:  8, y: 36, w: 23, h: 12, idx: 0 },
+    { x: 33, y: 36, w: 23, h: 12, idx: 1 },
+    { x: 58, y: 36, w: 23, h: 12, idx: 2 },
+    { x: 83, y: 36, w: 23, h: 12, idx: 3 },
+    { x:108, y: 36, w: 23, h: 12, idx: 4 },
   ];
-  ui.gameRect = { x: 144, y: 36, w: 40, h: 12 };
-  ui.gameCircle = { cx: 164, cy: 42, r: 13 };
+  ui.tapeRect  = { x: 134, y: 36, w: 30, h: 12 };
+  ui.gameRect  = { x: 166, y: 36, w: 40, h: 12 };
+  ui.gameCircle = { cx: 190, cy: 42, r: 13 };
+  ui.closeRect  = { x: 208, y:  8, w: 10, h: 10 };
   ui.knobRects = [
-    { key:'cutoff', label:'CUT', x: 132, y: 76, r: 8 },
-    { key:'resonance', label:'RES', x: 164, y: 76, r: 8 },
-    { key:'level', label:'VOL', x: 132, y: 108, r: 8 },
-    { key:'reverb', label:'VERB', x: 164, y: 108, r: 8 },
+    { key:'cutoff',    label:'CUT',  x: 152, y: 76,  r: 8 },
+    { key:'time',      label:'TIME', x: 192, y: 76,  r: 8 },
+    { key:'level',     label:'VOL',  x: 152, y: 108, r: 8 },
+    { key:'reverb',    label:'VERB', x: 192, y: 108, r: 8 },
   ];
   ui.songPrevRect = { x: 8, y: 36, w: 14, h: 12 };
   ui.songNextRect = { x: 24, y: 36, w: 14, h: 12 };
@@ -13332,7 +13482,7 @@ function synthDraw() {
   ctx.strokeRect(1, 1, w - 2, h - 2);
 
   synthDrawText(ctx, 'VL-TONE', 8, 8);
-  synthDrawText(ctx, 'SM-1', 112, 8);
+  synthDrawText(ctx, 'SM-1', 136, 8);
 
   if (synthMode !== 'game') {
     const c = ui.closeRect;
@@ -13345,9 +13495,9 @@ function synthDraw() {
   }
 
   ctx.fillStyle = '#8bac6a';
-  ctx.fillRect(8, 18, 94, 12);
+  ctx.fillRect(8, 18, 118, 12);
   ctx.strokeStyle = '#2f381f';
-  ctx.strokeRect(8.5, 18.5, 94, 12);
+  ctx.strokeRect(8.5, 18.5, 118, 12);
   ctx.fillStyle = '#1a2010';
   if (window.__synthDebug && window.__synthLastKey) {
     synthDrawText(ctx, (window.__synthLastKey || '-') + ' ' + (window.__synthLastState || ''), 12, 21);
@@ -13362,8 +13512,30 @@ function synthDraw() {
     ctx.strokeStyle = '#5d5244';
     ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w, r.h);
     ctx.fillStyle = active ? '#fbf5e8' : '#241c14';
-    synthDrawText(ctx, SYNTH_PRESETS[r.idx].name, r.x + Math.floor(r.w/2), r.y + 2, 'center');
+    ctx.save(); ctx.font = '7px Pixellari, monospace'; ctx.textBaseline='top'; ctx.textAlign='center';
+    ctx.fillText(SYNTH_PRESETS[r.idx].name, r.x + Math.floor(r.w/2), r.y + 3); ctx.restore();
   });
+
+  // TAPE LOOP button
+  if (synthMode !== 'game') {
+    const tr = ui.tapeRect;
+    if (tr) {
+      ctx.fillStyle = synthTapeActive ? '#3a6e3a' : '#c8c0b0';
+      ctx.fillRect(tr.x, tr.y, tr.w, tr.h);
+      ctx.strokeStyle = synthTapeActive ? '#1a4a1a' : '#5d5244';
+      ctx.lineWidth = synthTapeActive ? 1.5 : 1;
+      ctx.strokeRect(tr.x + 0.5, tr.y + 0.5, tr.w, tr.h);
+      ctx.lineWidth = 1;
+      if (synthTapeActive) {
+        // pulsing LED dot
+        ctx.fillStyle = '#5aff5a';
+        ctx.beginPath(); ctx.arc(tr.x + 5, tr.y + 6, 2.5, 0, Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle = synthTapeActive ? '#b8ffb8' : '#241c14';
+      ctx.save(); ctx.font = '7px Pixellari, monospace'; ctx.textBaseline='top'; ctx.textAlign='center';
+      ctx.fillText('LOOP', tr.x + (synthTapeActive ? 14 : 13), tr.y + 3); ctx.restore();
+    }
+  }
 
   if (synthMode === 'game') {
     const gameRect = ui.gameRect;
@@ -13400,23 +13572,30 @@ function synthDraw() {
     ctx.strokeRect(k.x + 0.5, k.y + 0.5, k.w, k.h);
   });
   if (synthMode !== 'game') {
+    // "type to play notes" hint — between presets and keys
+    ctx.fillStyle = '#6a5e52';
+    ctx.save(); ctx.font = '7px Pixellari, monospace'; ctx.textBaseline='top'; ctx.textAlign='left';
+    ctx.fillText('type to play', 8, 55); ctx.restore();
+
     const knobs = ui.knobRects || [];
     const kv=synthGetKnobState();
     knobs.forEach(knob=>{
       const value=Math.max(0, Math.min(1, kv[knob.key]||0));
+      const label = knob.label;
       ctx.fillStyle = '#e7e1d2';
       ctx.fillRect(knob.x - 11, knob.y - 11, 22, 22);
       ctx.strokeStyle = '#8d826f';
       ctx.lineWidth = 1;
       ctx.strokeRect(knob.x - 10.5, knob.y - 10.5, 21, 21);
       ctx.fillStyle = '#5d5244';
-      synthDrawText(ctx, knob.label, knob.x, knob.y + 13, 'center');
+      synthDrawText(ctx, label, knob.x, knob.y + 13, 'center');
       ctx.fillStyle = '#c8c0b0';
       ctx.beginPath(); ctx.arc(knob.x, knob.y, knob.r, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle = '#5d5244';
       ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(knob.x, knob.y, knob.r-0.5, 0, Math.PI*2); ctx.stroke();
-      const angle = (-0.75*Math.PI) + value * (1.5*Math.PI);
+      // 7 o'clock start (2π/3 from right = 120° CW), sweeping 270° clockwise to 5 o'clock
+      const angle = (2 * Math.PI / 3) + value * (1.5 * Math.PI);
       const px = knob.x + Math.cos(angle) * (knob.r - 3);
       const py = knob.y + Math.sin(angle) * (knob.r - 3);
       ctx.strokeStyle = '#241c14';
@@ -13485,6 +13664,8 @@ function synthHitTest(x, y){
   for (const r of ui.presetRects) {
     if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return {type:'preset', idx:r.idx};
   }
+  const tr = ui.tapeRect;
+  if (tr && x >= tr.x && x <= tr.x + tr.w && y >= tr.y && y <= tr.y + tr.h) return {type:'tape'};
   for (const k of ui.blackKeys) {
     if (x >= k.x && x <= k.x + k.w && y >= k.y && y <= k.y + k.h) return {type:'note', note:k.note};
   }
@@ -13533,6 +13714,7 @@ function synthPointerDown(e){
   }
   if (hit.type === 'lane') { synthGameHandleLane(hit.lane); return; }
   if (hit.type === 'preset') { synthSetPreset(hit.idx); return; }
+  if (hit.type === 'tape')   { synthToggleTape(); return; }
   if (hit.type === 'note') {
     ui.pointerNote = hit.note;
     synthPressNote(hit.note);
@@ -13936,7 +14118,7 @@ window.dbgReleasePlushBedLocks = function(){
   <div id="synth-panel">
     <div id="synth-brand-label">Slow MG-1</div>
     <input id="synth-key-capture" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="none" tabindex="0">
-    <canvas id="synth-canvas" width="196" height="132" tabindex="0" aria-label="Synth keyboard"></canvas>
+    <canvas id="synth-canvas" width="224" height="132" tabindex="0" aria-label="Synth keyboard"></canvas>
   </div>
 </div>
 
