@@ -4,6 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="icon" href="data:,">
 <script>
 // Detect mobile early so CSS class is set before first paint
 (function(){
@@ -419,7 +420,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
   pointer-events:all;
   font-family:'Pixellari',monospace;
   font-size:9px; letter-spacing:0.18em; text-transform:uppercase;
-  color:#7a6a8a;
+  color:#c0a8d8;
 }
 #graphics-quality-toggle {
   font-family:'Pixellari',monospace;
@@ -1016,7 +1017,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
         <button class="title-btn" id="btn-load" onclick="titleLoadGame()">LOAD</button>
       </div>
       <div class="title-graphics">
-        <span>graphics</span>
+        <span style="cursor:pointer" onclick="window.cycleGraphicsQuality&&window.cycleGraphicsQuality()">graphics</span>
         <button id="graphics-quality-toggle" type="button" onclick="window.cycleGraphicsQuality&&window.cycleGraphicsQuality()">high</button>
       </div>
       <div id="title-hint" style="display:none"></div>
@@ -2630,12 +2631,12 @@ const tvChannels=[
 // Channel files: assets/video/channel1.mp4 through channel5.mp4
 // Videos loop silently. VHS tapes play with audio and override channel.
 const CD_SLOT_DEFAULTS=[
-  {id:'disk0',label:'Dreams',audioUrl:'sounds/disk.mp3',color:0xb8d8f4,labelColor:0x6f9dc4,stems:['sounds/disk0_stem1.mp3','sounds/disk0_stem2.mp3','sounds/disk0_stem3.mp3','sounds/disk0_stem4.mp3'],stemLabels:['sample','guitar','vocal','drum/bass']},
-  {id:'disk1',label:'a train i never took',audioUrl:'sounds/disk1 done.mp3',color:0xc0a8d8,labelColor:0xc090e0,stems:['sounds/disk1_stem1.mp3','sounds/disk1_stem2.mp3','sounds/disk1_stem3.mp3','sounds/disk1_stem4.mp3'],stemLabels:['synths','bass','drums','vocal']},
-  {id:'disk2',label:'Need U',audioUrl:'sounds/disk2.mp3',color:0xd4e8c8,labelColor:0x88c070,stems:['sounds/disk2_stem1.mp3','sounds/disk2_stem2.mp3','sounds/disk2_stem3.mp3','sounds/disk2_stem4.mp3'],stemLabels:['guitar','drums','keys','vocal']},
-  {id:'disk3',label:'Half Alive',audioUrl:'sounds/disk3.mp3',color:0xc8d4e8,labelColor:0x7090c0,stems:['sounds/disk3_stem1.mp3','sounds/disk3_stem2.mp3','sounds/disk3_stem3.mp3','sounds/disk3_stem4.mp3'],stemLabels:['synths','drums','guitar','bass']},
-  {id:'disk4',label:'Celebrity',audioUrl:'sounds/disk4.mp3',color:0xf0f0f0,labelColor:0xb8b8d8,stems:['sounds/disk4_stem1.mp3','sounds/disk4_stem2.mp3','sounds/disk4_stem3.mp3','sounds/disk4_stem4.mp3'],stemLabels:['drums','synths','samples','bass']},
-  {id:'disk5',label:'Hanami',audioUrl:'sounds/disk5.mp3',color:0xf3a0bc,labelColor:0xc03070,stems:['sounds/disk5_stem1.mp3','sounds/disk5_stem2.mp3','sounds/disk5_stem3.mp3','sounds/disk5_stem4.mp3'],stemLabels:['guitar','keys','bass','drums']},
+  {id:'disk0',label:'Dreams',audioUrl:'assets/sounds/disk.mp3',color:0xb8d8f4,labelColor:0x6f9dc4,stems:['assets/sounds/disk0_stem1.mp3','assets/sounds/disk0_stem2.mp3','assets/sounds/disk0_stem3.mp3','assets/sounds/disk0_stem4.mp3'],stemLabels:['sample','guitar','vocal','drum/bass']},
+  {id:'disk1',label:'a train i never took',audioUrl:'assets/sounds/disk1 done.mp3',color:0xc0a8d8,labelColor:0xc090e0,stems:['assets/sounds/disk1_stem1.mp3','assets/sounds/disk1_stem2.mp3','assets/sounds/disk1_stem3.mp3','assets/sounds/disk1_stem4.mp3'],stemLabels:['synths','bass','drums','vocal']},
+  {id:'disk2',label:'Need U',audioUrl:'assets/sounds/disk2.mp3',color:0xd4e8c8,labelColor:0x88c070,stems:['assets/sounds/disk2_stem1.mp3','assets/sounds/disk2_stem2.mp3','assets/sounds/disk2_stem3.mp3','assets/sounds/disk2_stem4.mp3'],stemLabels:['guitar','drums','keys','vocal']},
+  {id:'disk3',label:'Half Alive',audioUrl:'assets/sounds/disk3.mp3',color:0xc8d4e8,labelColor:0x7090c0,stems:['assets/sounds/disk3_stem1.mp3','assets/sounds/disk3_stem2.mp3','assets/sounds/disk3_stem3.mp3','assets/sounds/disk3_stem4.mp3'],stemLabels:['synths','drums','guitar','bass']},
+  {id:'disk4',label:'Celebrity',audioUrl:'assets/sounds/disk4.mp3',color:0xf0f0f0,labelColor:0xb8b8d8,stems:['assets/sounds/disk4_stem1.mp3','assets/sounds/disk4_stem2.mp3','assets/sounds/disk4_stem3.mp3','assets/sounds/disk4_stem4.mp3'],stemLabels:['drums','synths','samples','bass']},
+  {id:'disk5',label:'Hanami',audioUrl:'assets/sounds/disk5.mp3',color:0xf3a0bc,labelColor:0xc03070,stems:['assets/sounds/disk5_stem1.mp3','assets/sounds/disk5_stem2.mp3','assets/sounds/disk5_stem3.mp3','assets/sounds/disk5_stem4.mp3'],stemLabels:['guitar','keys','bass','drums']},
 ];
 const VHS_SLOT_DEFAULTS=[
   {id:'vhs1',label:'vhs 1',videoUrl:'assets/video/vhs1.mp4',color:0x2a1e3a,labelColor:0x5d4a82},
@@ -2679,12 +2680,12 @@ const sfxDefaults={
   drumHitL:{url:'',volume:0.8},
   drumHitR:{url:'',volume:0.8},
   coin:{url:'',volume:0.78},
-  bounce:{url:'sounds/sfx/bounce.mp3',volume:0.55},
-  writing:{url:'sounds/sfx/writing.mp3',volume:0.5},
-  logoSting:{url:'sounds/sfx/logo-sting.mp3',volume:0.85},
-  titleMusic:{url:'sounds/sfx/title.mp3',volume:0.5},
+  bounce:{url:'assets/sounds/sfx/bounce.mp3',volume:0.55},
+  writing:{url:'assets/sounds/sfx/writing.mp3',volume:0.5},
+  logoSting:{url:'assets/sounds/sfx/logo-sting.mp3',volume:0.85},
+  titleMusic:{url:'assets/sounds/sfx/title.mp3',volume:0.5},
   tvOn:{url:'',volume:0.7},
-  channelChange:{url:'sounds/sfx/channel-change.mp3',volume:0.72},
+  channelChange:{url:'',volume:0.72},
   charStep:{url:'',volume:0.35}
 };
 let sfxConfig=JSON.parse(JSON.stringify(sfxDefaults));
@@ -4794,7 +4795,7 @@ window.dbgSaveDiskConfig=function(){
   enforceHardcodedDiskAudioPaths();
   refreshDiskUI();
   const st=document.getElementById('d-simple-media-status') || document.getElementById('d-settings-status');
-  if(st) st.textContent='cd audio paths are hardcoded to sounds/';
+  if(st) st.textContent='cd audio paths are hardcoded to assets/sounds/';
 };
 window.dbgApplyDiskSelection=function(){ activeDiskId=normalizeDiskId((document.getElementById('d-disksel')||{}).value||activeDiskId); refreshDiskUI(); };
 window.dbgGiveSelectedDisk=function(){}; // pocket removed
@@ -9961,6 +9962,7 @@ function titleNewGame(){
   // Reset CD system in-memory state so disks don't persist across new game
   if(window.cdp){
     cdp.registeredDisks=[];
+    cdp.runtimeRegisteredDisks=[];
     cdp.activeDisk=null; cdp.playing=false; cdp.paused=false;
   }
   // Reset diskLibrary stemLabels from defaults (in case save had stale values)
@@ -10504,8 +10506,8 @@ function getNextPetSoundDelay(){
   return baseDelay / PET_SOUND_RATE_SCALE;
 }
 PET_SFX_IDS.forEach(k=>{ 
-  if(!sfxDefaults[k]) sfxDefaults[k]={url:'sounds/sfx/'+k+'.mp3',volume:0.7}; 
-  if(!sfxConfig[k]) sfxConfig[k]={url:'sounds/sfx/'+k+'.mp3',volume:0.7}; 
+  if(!sfxDefaults[k]) sfxDefaults[k]={url:'assets/sounds/sfx/'+k+'.mp3',volume:0.7}; 
+  if(!sfxConfig[k]) sfxConfig[k]={url:'assets/sounds/sfx/'+k+'.mp3',volume:0.7}; 
 });
 
   if(location.protocol!=='file:'){
@@ -10631,6 +10633,15 @@ window.setGraphicsQuality=function(level, opts={}){
   }
   syncUIToPost();
   syncGraphicsQualityUI(normalized);
+  // Hide fake blob shadows in low mode (shadow map is off); restore otherwise
+  if(typeof toyRegistry !== 'undefined'){
+    const showBlob = !!p.shadows;
+    Object.values(toyRegistry).forEach(toy=>{
+      if(!toy||!toy.grp) return;
+      const sh=toy.grp.getObjectByName('sm_pet_blob_shadow');
+      if(sh) sh.visible=showBlob;
+    });
+  }
   if(opts.persist){
     try{ localStorage.setItem(GRAPHICS_QUALITY_KEY, normalized); }catch(e){}
   }
@@ -11658,32 +11669,32 @@ const ASSET_DEFAULTS = {
   },
 
   sfx: {
-    pickup:     'sounds/sfx/pickup.mp3',
-    drop:       'sounds/sfx/drop.mp3',
-    trashThrow: 'sounds/sfx/trash-throw.mp3',
-    trashCan:   'sounds/sfx/trash-can.mp3',
-    fridgeOpen: 'sounds/sfx/fridge-open.mp3',
-    cdInsert:   'sounds/sfx/cd-insert.mp3',
-    cdEject:    'sounds/sfx/cd-eject.mp3',
-    lampClick:  'sounds/sfx/lamp-click.mp3',
-    yawn:       'sounds/sfx/yawn.mp3',
-    packageSpawn:'sounds/sfx/package-spawn.mp3',
-    drumBeat:    'sounds/sfx/drum-beat.mp3',
-    drumBeat2:   'sounds/sfx/Drum-Beat2.mp3',
-    drumBeat3:   'sounds/sfx/Drum-Beat3.mp3',
-    drumBeat4:   'sounds/sfx/Drum-Beat4.mp3',
-    drumBeat5:   'sounds/sfx/Drum-Beat5.mp3',
-    drumHitL:    'sounds/sfx/DrumL.mp3',
-    drumHitR:    'sounds/sfx/DrumR.mp3',
-    bounce:      'sounds/sfx/bounce.mp3',
-    coin:       'sounds/sfx/coin.mp3',
-    eat:        'sounds/sfx/eat.mp3',
-    drink:      'sounds/sfx/drink.mp3',
-    pet_dog:    'sounds/sfx/pet_dog.mp3',
-    pet_frog:   'sounds/sfx/pet_frog.mp3',
-    pet_duck:   'sounds/sfx/pet_duck.mp3',
-    pet_cow:    'sounds/sfx/pet_cow.mp3',
-    pet_penguin:'sounds/sfx/pet_penguin.mp3',
+    pickup:     'assets/sounds/sfx/pickup.mp3',
+    drop:       '',
+    trashThrow: '',
+    trashCan:   'assets/sounds/sfx/trash-can.mp3',
+    fridgeOpen: 'assets/sounds/sfx/fridge-open.mp3',
+    cdInsert:   'assets/sounds/sfx/cd-insert.mp3',
+    cdEject:    'assets/sounds/sfx/cd-eject.mp3',
+    lampClick:  '',
+    yawn:       '',
+    packageSpawn:'',
+    drumBeat:    'assets/sounds/sfx/drum-beat.mp3',
+    drumBeat2:   'assets/sounds/sfx/Drum-Beat2.mp3',
+    drumBeat3:   'assets/sounds/sfx/Drum-Beat3.mp3',
+    drumBeat4:   'assets/sounds/sfx/Drum-Beat4.mp3',
+    drumBeat5:   'assets/sounds/sfx/Drum-Beat5.mp3',
+    drumHitL:    'assets/sounds/sfx/DrumL.mp3',
+    drumHitR:    'assets/sounds/sfx/DrumR.mp3',
+    bounce:      'assets/sounds/sfx/bounce.mp3',
+    coin:       'assets/sounds/sfx/coin.mp3',
+    eat:        'assets/sounds/sfx/eat.mp3',
+    drink:      'assets/sounds/sfx/drink.mp3',
+    pet_dog:    'assets/sounds/sfx/pet_dog.mp3',
+    pet_frog:   'assets/sounds/sfx/pet_frog.mp3',
+    pet_duck:   'assets/sounds/sfx/pet_duck.mp3',
+    pet_cow:    'assets/sounds/sfx/pet_cow.mp3',
+    pet_penguin:'assets/sounds/sfx/pet_penguin.mp3',
   },
 
   // Plush / reward models — place GLBs in assets/models/rewards/
@@ -11701,11 +11712,11 @@ const ASSET_DEFAULTS = {
   vhsVideo: 'assets/video/vhs.mp4',
 
   ambience: {
-    room:      'sounds/ambience/ambience-room.mp3',
-    fridgeHum: 'sounds/ambience/fridge-hum.mp3',
-    night:     'sounds/ambience/ambience-night.mp3',
-    outside:   'sounds/ambience/ambience-outside.mp3',
-    producing: 'sounds/ambience/producing.mp3',
+    room:      'assets/sounds/ambience/ambience-room.mp3',
+    fridgeHum: '',
+    night:     'assets/sounds/ambience/ambience-night.mp3',
+    outside:   '',
+    producing: 'assets/sounds/ambience/producing.mp3',
   },
 };
 // Auto-load reward models from ASSET_DEFAULTS
@@ -11736,9 +11747,21 @@ function resolveTextureSrc(key, r){
   return null;
 }
 
+function normalizePackagedSoundUrl(url){
+  if(!url || typeof url!=='string') return '';
+  const trimmed=url.trim();
+  if(!trimmed || trimmed.startsWith('blob:') || /^https?:\/\//i.test(trimmed) || trimmed.startsWith('data:')) return trimmed;
+  return trimmed.replace(/^\/?sounds\//, 'assets/sounds/');
+}
+
 function resolveSoundSrc(key, entry, type='sfx'){
-  if(ASSET_DEFAULTS[type] && ASSET_DEFAULTS[type][key]) return ASSET_DEFAULTS[type][key];
-  if(entry && entry.url && !entry.url.startsWith('blob:')) return entry.url;
+  const defaults=ASSET_DEFAULTS[type] || {};
+  const hasPackagedDefault=Object.prototype.hasOwnProperty.call(defaults, key);
+  const packagedDefault=normalizePackagedSoundUrl(defaults[key]);
+  if(packagedDefault) return packagedDefault;
+  if(hasPackagedDefault && defaults[key]==='') return '';
+  const url=normalizePackagedSoundUrl(entry && entry.url);
+  if(url && !url.startsWith('blob:')) return url;
   return null;
 }
 
@@ -12208,7 +12231,7 @@ function applySettings(s){
       });
       activeDiskId=normalizeDiskId(s.cdSystem.active||activeDiskId||'disk0');
       if(window.cdp){
-        cdp.registeredDisks = Array.isArray(s.cdSystem.registered) ? s.cdSystem.registered.slice().map(id=>normalizeDiskId(id)) : [];
+        cdp.runtimeRegisteredDisks = [];
         if(window.cdpSyncRegisteredDisks) window.cdpSyncRegisteredDisks();
         if(typeof cdpSyncRegisteredDisks==='function') cdpSyncRegisteredDisks();
       }
@@ -12229,8 +12252,8 @@ function applySettings(s){
       refreshVHSUI();
     }
     if(s.sleepPose){ sleepPoseConfig=JSON.parse(JSON.stringify({...sleepPoseDefaults, ...s.sleepPose, approach:{...(sleepPoseDefaults.approach||{}), ...((s.sleepPose||{}).approach||{})}, position:{...(sleepPoseDefaults.position||{}), ...((s.sleepPose||{}).position||{})}, rotation:{...(sleepPoseDefaults.rotation||{}), ...((s.sleepPose||{}).rotation||{})}, wake:{...(sleepPoseDefaults.wake||{}), ...((s.sleepPose||{}).wake||{})}})); syncSleepPoseUI(); }
-    if(s.sfxSystem){ Object.keys(sfxDefaults).forEach(k=>{ sfxConfig[k]={...(sfxDefaults[k]||{}), ...((s.sfxSystem||{})[k]||{})}; const resolved=resolveSoundSrc(k,sfxConfig[k],'sfx'); if(resolved) sfxConfig[k].url=resolved; }); syncSFXUI(); }
-    if(s.ambienceSystem){ Object.keys(ambienceDefaults).forEach(k=>{ ambienceConfig[k]={...(ambienceDefaults[k]||{}), ...((s.ambienceSystem||{})[k]||{})}; const resolved=resolveSoundSrc(k,ambienceConfig[k],'ambience'); if(resolved) ambienceConfig[k].url=resolved; }); if(ambienceConfig.room) ambienceConfig.room.volume=Math.max(0.36, parseFloat(ambienceConfig.room.volume)||0); if(ambienceConfig.night) ambienceConfig.night.volume=Math.max(0.26, parseFloat(ambienceConfig.night.volume)||0); syncAmbienceUI(); }
+    if(s.sfxSystem){ Object.keys(sfxDefaults).forEach(k=>{ sfxConfig[k]={...(sfxDefaults[k]||{}), ...((s.sfxSystem||{})[k]||{})}; const resolved=resolveSoundSrc(k,sfxConfig[k],'sfx'); sfxConfig[k].url=resolved||''; }); syncSFXUI(); }
+    if(s.ambienceSystem){ Object.keys(ambienceDefaults).forEach(k=>{ ambienceConfig[k]={...(ambienceDefaults[k]||{}), ...((s.ambienceSystem||{})[k]||{})}; const resolved=resolveSoundSrc(k,ambienceConfig[k],'ambience'); ambienceConfig[k].url=resolved||''; }); if(ambienceConfig.room) ambienceConfig.room.volume=Math.max(0.36, parseFloat(ambienceConfig.room.volume)||0); if(ambienceConfig.night) ambienceConfig.night.volume=Math.max(0.26, parseFloat(ambienceConfig.night.volume)||0); syncAmbienceUI(); }
     ok(`✓ settings applied · tex ${loadSummary.textures} · room ${loadSummary.models} · items ${loadSummary.itemModels} · decor ${loadSummary.decorations}`);
     enforceMediaVisualDefaults();
     syncDebugUI();
@@ -12978,12 +13001,23 @@ function synthGetOutput(){
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -24; comp.knee.value = 18; comp.ratio.value = 3;
     comp.attack.value = 0.01; comp.release.value = 0.18;
-    // preMix collects dry + tape before volume fader
+    // preMix collects live synth + printed tape before volume fader
     const preMix = ctx.createGain(); preMix.gain.value = 1.0;
     // master = volume fader
     const master = ctx.createGain();
     master.gain.value = (synthMode === 'game') ? 0.6 : 0.45;
-    hp.connect(lp); lp.connect(comp); comp.connect(preMix);
+    hp.connect(lp); lp.connect(comp);
+    // ── Reverb is printed before the tape loop ──
+    // Live notes go through this mix, then into the loop recorder. Tape playback
+    // returns after this point, so later knob changes don't remove recorded verb.
+    const liveMix = ctx.createGain(); liveMix.gain.value = 1.0;
+    const reverbConv = ctx.createConvolver();
+    reverbConv.buffer = synthMakeReverb(ctx, 6.0, 0.42);
+    const reverbWet = ctx.createGain(); reverbWet.gain.value = 0;
+    const postDry = ctx.createGain(); postDry.gain.value = 1.0;
+    comp.connect(postDry); postDry.connect(liveMix);
+    comp.connect(reverbConv); reverbConv.connect(reverbWet); reverbWet.connect(liveMix);
+    liveMix.connect(preMix);
     // ── Tape loop chain (feeds into preMix) ──
     const tapeSend = ctx.createGain(); tapeSend.gain.value = 0;
     const tapeDelay = ctx.createDelay(13.0); tapeDelay.delayTime.value = 2.0;
@@ -12991,16 +13025,11 @@ function synthGetOutput(){
     const tapeLPF = ctx.createBiquadFilter();
     tapeLPF.type = 'lowpass'; tapeLPF.frequency.value = 2200;
     const tapeWet = ctx.createGain(); tapeWet.gain.value = 0.72;
-    comp.connect(tapeSend);
+    liveMix.connect(tapeSend);
     tapeSend.connect(tapeDelay);
     tapeDelay.connect(tapeLPF); tapeLPF.connect(tapeFeedback); tapeFeedback.connect(tapeDelay);
     tapeDelay.connect(tapeWet); tapeWet.connect(preMix);
     preMix.connect(master);
-    // ── Reverb LAST — post volume, post loop ──
-    const reverbConv = ctx.createConvolver();
-    reverbConv.buffer = synthMakeReverb(ctx, 6.0, 0.42);
-    const reverbWet = ctx.createGain(); reverbWet.gain.value = 0;
-    const postDry = ctx.createGain(); postDry.gain.value = 1.0;
     const outputGain = ctx.createGain(); outputGain.gain.value = 1.0;
     const spatialPanner = ctx.createPanner();
     spatialPanner.panningModel = 'HRTF';
@@ -13011,10 +13040,9 @@ function synthGetOutput(){
     spatialPanner.coneInnerAngle = 180;
     spatialPanner.coneOuterAngle = 360;
     spatialPanner.coneOuterGain = 0.35;
-    master.connect(postDry); postDry.connect(outputGain);
-    master.connect(reverbConv); reverbConv.connect(reverbWet); reverbWet.connect(outputGain);
+    master.connect(outputGain);
     outputGain.connect(ctx.destination);
-    synthOutputChain = { ctx, hp, lp, comp, preMix, master, postDry, reverbConv, reverbWet, outputGain, spatialPanner, spatialRoute:'direct', tapeSend, tapeDelay, tapeFeedback, tapeLPF, tapeWet };
+    synthOutputChain = { ctx, hp, lp, comp, liveMix, preMix, master, postDry, reverbConv, reverbWet, outputGain, spatialPanner, spatialRoute:'direct', tapeSend, tapeDelay, tapeFeedback, tapeLPF, tapeWet };
     window.synthOutputChain = synthOutputChain;
   }
   synthApplyKnobValues();
@@ -13032,7 +13060,7 @@ function synthApplyKnobValues(){
     const range = (synthMode === 'game') ? 0.8 : 1.34;
     out.master.gain.value = base + Math.max(0, Math.min(1, k.level||0)) * range;
   }
-  // VERB post-loop: equal-power wet/dry crossfade.
+  // VERB pre-loop: equal-power wet/dry crossfade gets printed into tape.
   // At max reverb the dry path is fully gone, with a wet lift so volume stays present.
   if(out.reverbWet){
     const rv = Math.max(0, Math.min(1, k.reverb||0));
@@ -13041,8 +13069,8 @@ function synthApplyKnobValues(){
     out.reverbWet.gain.value = wetGain;
     if(out.postDry) out.postDry.gain.value = dryGain;
   }
-  // TIME → tape loop delay (low=long 4s, high=short 0.35s), only when active
-  if(out.tapeDelay && synthTapeActive){
+  // TIME → tape loop delay (low=long 12s, high=short 0.35s), always kept in sync
+  if(out.tapeDelay){
     const t = Math.max(0, Math.min(1, k.time||0));
     out.tapeDelay.delayTime.value = 12.0 - t * 11.65;
   }
@@ -13515,7 +13543,8 @@ function synthBuildKeys() {
     { x: 83, y: 36, w: 23, h: 12, idx: 3 },
     { x:108, y: 36, w: 23, h: 12, idx: 4 },
   ];
-  ui.tapeRect  = { x: 134, y: 36, w: 30, h: 12 };
+  ui.tapeCircle = { cx: 149, cy: 42, r: 13 };
+  ui.tapeRect  = { x: 136, y: 29, w: 26, h: 26 };
   ui.gameRect  = { x: 166, y: 36, w: 40, h: 12 };
   ui.gameCircle = { cx: 190, cy: 42, r: 13 };
   ui.closeRect  = { x: 208, y:  8, w: 10, h: 10 };
@@ -13635,29 +13664,30 @@ function synthDraw() {
 
   // TAPE LOOP button
   if (synthMode !== 'game') {
-    const tr = ui.tapeRect;
-    if (tr) {
+    const tc = ui.tapeCircle;
+    if (tc) {
       ctx.fillStyle = synthTapeActive ? '#3a6e3a' : '#c8c0b0';
-      ctx.fillRect(tr.x, tr.y, tr.w, tr.h);
+      ctx.beginPath(); ctx.arc(tc.cx, tc.cy, tc.r, 0, Math.PI*2); ctx.fill();
       ctx.strokeStyle = synthTapeActive ? '#1a4a1a' : '#5d5244';
-      ctx.lineWidth = synthTapeActive ? 1.5 : 1;
-      ctx.strokeRect(tr.x + 0.5, tr.y + 0.5, tr.w, tr.h);
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(tc.cx, tc.cy, tc.r-0.5, 0, Math.PI*2); ctx.stroke();
       ctx.lineWidth = 1;
       if (synthTapeActive) {
-        // pulsing LED dot — blinks once per loop cycle
-        const beatMs=synthLoopDelaySeconds()*1000;
+        // sharp flash at loop reset — fixed 200ms duration tied to loop period
+        const beatMs=synthLoopDelaySeconds()*62.5; // 16 steps per loop
         const phase=(performance.now()%beatMs)/beatMs;
-        const pulse=Math.max(0, 1 - phase*3.2);
+        const flashFrac=Math.min(0.3, 200/beatMs);
+        const pulse=Math.max(0, 1 - phase/flashFrac);
         if(pulse>0.02){
           ctx.fillStyle = `rgba(90,255,90,${0.18 + pulse*0.48})`;
-          ctx.fillRect(tr.x, tr.y, tr.w, tr.h);
+          ctx.beginPath(); ctx.arc(tc.cx, tc.cy, tc.r-1, 0, Math.PI*2); ctx.fill();
         }
         ctx.fillStyle = '#5aff5a';
-        ctx.beginPath(); ctx.arc(tr.x + 5, tr.y + 6, 2.5 + pulse*1.8, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(tc.cx, tc.cy - 8, 2.2 + pulse*1.5, 0, Math.PI*2); ctx.fill();
       }
       ctx.fillStyle = synthTapeActive ? '#b8ffb8' : '#241c14';
       ctx.save(); ctx.font = '7px Pixellari, monospace'; ctx.textBaseline='top'; ctx.textAlign='center';
-      ctx.fillText('LOOP', tr.x + (synthTapeActive ? 14 : 13), tr.y + 3); ctx.restore();
+      ctx.fillText('LOOP', tc.cx, tc.cy - 4); ctx.restore();
     }
   }
 
@@ -13788,8 +13818,8 @@ function synthHitTest(x, y){
   for (const r of ui.presetRects) {
     if (x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h) return {type:'preset', idx:r.idx};
   }
-  const tr = ui.tapeRect;
-  if (tr && x >= tr.x && x <= tr.x + tr.w && y >= tr.y && y <= tr.y + tr.h) return {type:'tape'};
+  const tc = ui.tapeCircle;
+  if (tc && Math.hypot(x-tc.cx, y-tc.cy) <= tc.r) return {type:'tape'};
   for (const k of ui.blackKeys) {
     if (x >= k.x && x <= k.x + k.w && y >= k.y && y <= k.y + k.h) return {type:'note', note:k.note};
   }
@@ -14375,7 +14405,7 @@ const SYNTH_GAME_HIT_WINDOW_MS = 170;
 const SYNTH_GAME_APPROACH_BEATS = 3.2;
 const SYNTH_GAME_LEAD_IN_BEATS = SYNTH_GAME_APPROACH_BEATS + 1.0;
 const SYNTH_GAME_SONGS = [];
-const SYNTH_GAME_TRAIN_AUDIO_URL = 'sounds/train-track-142bpm.mp3';
+const SYNTH_GAME_TRAIN_AUDIO_URL = 'assets/sounds/train-track-142bpm.mp3';
 const SYNTH_GAME_TRAIN_BASE = [
   {beat:0.0, hold:6.4958, midi:80, note:'G#5'},
   {beat:6.5, hold:0.6312, midi:82, note:'A#5'},
@@ -14500,7 +14530,7 @@ function synthGameBuildSimpleChart(base, laneFn){
 }
 
 // ---- MEMORY CARD ---- 154 BPM
-const SYNTH_GAME_MEMORY_AUDIO_URL = 'sounds/memory164.mp3';
+const SYNTH_GAME_MEMORY_AUDIO_URL = 'assets/sounds/memory164.mp3';
 const SYNTH_GAME_MEMORY_BASE = [
   {beat:0.0, hold:2.0625, midi:55, note:'G3'},
   {beat:2.0, hold:1.9792, midi:67, note:'G4'},
@@ -14530,7 +14560,7 @@ function synthGameMemoryLaneForMidi(midi){
 }
 
 // ---- CELEBRITY ---- 150 BPM
-const SYNTH_GAME_CELEBRITY_AUDIO_URL = 'sounds/celeb150.mp3';
+const SYNTH_GAME_CELEBRITY_AUDIO_URL = 'assets/sounds/celeb150.mp3';
 const SYNTH_GAME_CELEBRITY_BASE = [
   {beat:0.0, hold:2.1083, midi:64, note:'E4'},
   {beat:2.0, hold:2.0208, midi:69, note:'A4'},
@@ -15546,6 +15576,15 @@ function cdpSyncRegisteredDisks(){
 }
 window.cdpSyncRegisteredDisks=cdpSyncRegisteredDisks;
 cdpSyncRegisteredDisks();
+function cdpRegisterRuntimeDisk(id){
+  if(!isCDRewardId(id)) return '';
+  const diskId=normalizeDiskId(id);
+  if(!Array.isArray(cdp.runtimeRegisteredDisks)) cdp.runtimeRegisteredDisks=[];
+  if(!cdp.runtimeRegisteredDisks.includes(diskId)) cdp.runtimeRegisteredDisks.push(diskId);
+  cdpSyncRegisteredDisks();
+  return diskId;
+}
+window.cdpRegisterRuntimeDisk=cdpRegisterRuntimeDisk;
 
 // ── AudioContext + FX chain ───────────────────────────────────────────────
 function cdpEnsureAC(){
@@ -16208,6 +16247,7 @@ window.cdpBackdropClick=function(evt){
 // ── Open/close ─────────────────────────────────────────────────────────
 window.openCDPlayer=function(diskId, autoPlay=false){
   const ov=document.getElementById('cd-player-overlay'); if(!ov) return;
+  diskId = diskId && isCDRewardId(diskId) ? normalizeDiskId(diskId) : '';
   if(window.cdpSyncRegisteredDisks) window.cdpSyncRegisteredDisks();
   if(!diskId && (!cdp.registeredDisks || !cdp.registeredDisks.length)){
     speak('needs a disk.');
@@ -16229,7 +16269,6 @@ window.openCDPlayer=function(diskId, autoPlay=false){
   }
   actionLocked=true;
   haltCharacterMotion('idle');
-  if(diskId&&!cdp.registeredDisks.includes(diskId)) cdp.registeredDisks.push(diskId);
   cdpUpdateTabs();
   if(diskId&&diskId!==cdp.activeDisk) cdpLoadDisk(diskId, autoPlay);
   else if(!cdp.activeDisk&&diskId) cdpLoadDisk(diskId, autoPlay);
@@ -16277,11 +16316,12 @@ window.closeCDPlayer=function(){
 const _origPlayCD=window.playCDTrackById;
 if(typeof _origPlayCD==='function'){
   window.playCDTrackById=function(id){
+    id=cdpRegisterRuntimeDisk(id);
+    if(!id) return;
     const disk=(typeof diskLibrary!=='undefined'?diskLibrary:[]).find(d=>d.id===id)||
                (typeof CD_SLOT_DEFAULTS!=='undefined'?CD_SLOT_DEFAULTS:[]).find(d=>d.id===id);
     const hasStems=disk&&disk.stems&&disk.stems.length>0;
     if(!hasStems) _origPlayCD.call(this,id); // fallback single track
-    if(!cdp.registeredDisks.includes(id)) cdp.registeredDisks.push(id);
     cdpUpdateTabs();
     if(!cdp.open) window.openCDPlayer(id, true);
     else if(id!==cdp.activeDisk){ cdpLoadDisk(id, true); }
