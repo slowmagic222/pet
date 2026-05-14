@@ -4795,8 +4795,8 @@ function unlockTitleAudioFromGesture(){
 window.addEventListener('pointerdown', unlockTitleAudioFromGesture, {once:true});
 window.addEventListener('keydown', unlockTitleAudioFromGesture, {once:true, capture:true});
 // Retry when window gains focus — catches cases where user clicked outside first
-window.addEventListener('focus', ()=>{ if(!titleMusicStarted) unlockTitleAudioFromGesture(); });
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && !titleMusicStarted) setTimeout(unlockTitleAudioFromGesture, 200); });
+window.addEventListener('focus', ()=>{ if(typeof titleMusicStarted==='undefined'||!titleMusicStarted) unlockTitleAudioFromGesture(); });
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && (typeof titleMusicStarted==='undefined'||!titleMusicStarted)) setTimeout(unlockTitleAudioFromGesture, 200); });
 window.dbgApplyTVChannel=function(){ const sel=document.getElementById('d-tvchannel'); applyTVChannel(Number(sel?sel.value:0)); };
 window.dbgRandomizeTVChannel=function(){ applyTVChannel(Math.floor(Math.random()*tvChannels.length)); };
 window.dbgSaveTVChannelConfig=function(){ const sel=document.getElementById('d-tvchannel'); const idx=Number(sel?sel.value:0); const ch=tvChannels[idx]; ch.mediaUrl=(document.getElementById('d-tv-channel-media')||{}).value||''; ch.audioUrl=(document.getElementById('d-tv-audio-url')||{}).value||''; if(idx===currentTVChannelIndex) applyTVChannel(idx); else refreshTVChannelUI(); const st=document.getElementById('d-tvmedia-status'); if(st) st.textContent='tv channel saved'; };
@@ -7560,20 +7560,6 @@ ballGrp.add(ballMesh); ballGrp.add(ballStripe); ballGrp.add(ballStripe2);
 ballGrp.userData.isToy=true;
 addGrp('ball_toy',ballGrp);
 registerToy('ball_toy',ballGrp,'ball');
-// Restore ball visibility if previously unlocked (survives reload)
-(function(){
-  if(typeof progression!=='undefined' && Array.isArray(progression.unlockedRewards) && progression.unlockedRewards.includes('ball_toy')){
-    ballGrp.visible=true;
-    ballGrp.position.set(0.2, 0.12, 0.5);
-    ballGrp.rotation.set(0,0,0);
-    ballGrp.scale.setScalar(1);
-    if(typeof ballPhysics!=='undefined' && ballPhysics){
-      ballPhysics.active=false; ballPhysics.rest=true;
-      if(ballPhysics.vel) ballPhysics.vel.set(0,0,0);
-      if(ballPhysics.ang) ballPhysics.ang.set(0,0,0);
-    }
-  }
-})();
 // Replace the procedural ball with the shipping GLB when assets/models/rewards/ball_toy.glb is present.
 function loadBallToyGLB(){
   const src = ASSET_DEFAULTS?.models?.ball_toy || ASSET_DEFAULTS?.rewardModels?.ball_toy;
@@ -7603,6 +7589,15 @@ function loadBallToyGLB(){
 }
 setTimeout(loadBallToyGLB, 150);
 const ballPhysics=toyRegistry['ball_toy'].physics;
+// Restore ball visibility if previously unlocked (survives page reload)
+if(typeof progression!=='undefined' && Array.isArray(progression.unlockedRewards) && progression.unlockedRewards.includes('ball_toy')){
+  ballGrp.visible=true;
+  ballGrp.position.set(0.2, 0.12, 0.5);
+  ballGrp.rotation.set(0,0,0);
+  ballGrp.scale.setScalar(1);
+  ballPhysics.active=false; ballPhysics.rest=true;
+  ballPhysics.vel.set(0,0,0); ballPhysics.ang.set(0,0,0);
+}
 // Poster reward prototype — place on back / left / right wall, multiple at once
 const posterPlacementPlanes=[];
 function makePosterPlane(name,w,h){
@@ -10989,6 +10984,8 @@ function ensureGLTFLoader(done){
   const status=document.getElementById('loading-status');
   if(!overlay) return;
   let total=0, done=0, dismissed=false;
+  // Show immediate progress so bar doesn't look stuck
+  if(fill) fill.style.width='8%';
   window.__smLoadTrack=function(label){
     total++;
     if(fill) fill.style.width=Math.min(90,(done/Math.max(total,1))*100)+'%';
