@@ -28,7 +28,7 @@
   -webkit-user-select:none; -moz-user-select:none; user-select:none;
   -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none; }
 input, textarea { -webkit-user-select:text; user-select:text; }
-html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-family:'Pixellari',monospace; }
+html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-family:'Pixellari',monospace; -webkit-touch-callout:none; touch-action:manipulation; }
 #canvas { display:block; width:100%; height:100%; position:fixed; top:0; left:0; touch-action:none; }
 #post-overlay { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
 #ui { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; image-rendering:pixelated; transform-origin:top left; --ui-scale:1; --ui-pixelate:3; --global-ui-pixel:1; filter:none; z-index:20; }
@@ -809,6 +809,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 }
 .is-mobile #gameboy-mobile-btns, html.is-mobile #gameboy-mobile-btns, html.is-mobile #gameboy-mobile-btns { display: flex; }
 .gb-btn {
+  touch-action: manipulation;
   background: rgba(15,56,15,0.72);
   border: 2px solid #306230;
   color: #8bac0f;
@@ -839,6 +840,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 }
 .is-mobile #drum-mobile-btns, html.is-mobile #drum-mobile-btns { display: flex; }
 .drum-btn {
+  touch-action: manipulation;
   width: 90px; height: 90px;
   border-radius: 50%;
   border: 3px solid;
@@ -1004,6 +1006,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
     <img id="logo-splash-img" src="assets/ui/logo.png" alt="">
   </div>
 
+  <div id="loading-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a12;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Pixellari',monospace;transition:opacity 0.8s;">
+    <div style="color:#e8d5b0;font-size:clamp(11px,2vw,14px);letter-spacing:0.4em;text-transform:uppercase;margin-bottom:16px;">EMOTION ENGINE</div>
+    <div style="width:min(220px,60vw);height:6px;background:#1a1228;border:1px solid #3a2e4a;border-radius:1px;overflow:hidden;">
+      <div id="loading-bar-fill" style="height:100%;width:0%;background:#e84a8a;transition:width 0.3s;border-radius:1px;"></div>
+    </div>
+    <div id="loading-status" style="color:#6a5a7a;font-size:clamp(7px,1.4vw,9px);letter-spacing:0.2em;margin-top:10px;text-transform:uppercase;">loading...</div>
+  </div>
   <div id="title-screen">
     <!-- MAIN TITLE / MENU -->
     <div id="title-menu" style="display:none;opacity:0">
@@ -1130,8 +1139,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
     </div>
     <div id="drum-hint"></div>
     <div id="drum-mobile-btns">
-      <button class="drum-btn drum-btn-l" ontouchstart="drumMobileHit('L')" onclick="drumMobileHit('L')">◄</button>
-      <button class="drum-btn drum-btn-r" ontouchstart="drumMobileHit('R')" onclick="drumMobileHit('R')">►</button>
+      <button class="drum-btn drum-btn-l" ontouchstart="drumMobileHit('L');event.preventDefault()">◄</button>
+      <button class="drum-btn drum-btn-r" ontouchstart="drumMobileHit('R');event.preventDefault()">►</button>
     </div>
   </div>
 
@@ -1154,9 +1163,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 
 <div id="gameboy-overlay"><button id="gameboy-close" type="button">x</button><canvas id="gameboy-canvas" width="240" height="216"></canvas><div id="gameboy-hint"></div>
 <div id="gameboy-mobile-btns">
-  <button class="gb-btn" ontouchstart="gbMobileBtn('left')" onclick="gbMobileBtn('left')">◄</button>
-  <button class="gb-btn" ontouchstart="gbMobileBtn('spin')" onclick="gbMobileBtn('spin')">↻</button>
-  <button class="gb-btn" ontouchstart="gbMobileBtn('right')" onclick="gbMobileBtn('right')">►</button>
+  <button class="gb-btn" ontouchstart="gbMobileBtn('left');event.preventDefault()">◄</button>
+  <button class="gb-btn" ontouchstart="gbMobileBtn('spin');event.preventDefault()">↻</button>
+  <button class="gb-btn" ontouchstart="gbMobileBtn('right');event.preventDefault()">►</button>
 </div>
 </div>
 <video id="tv-video" crossorigin="anonymous" playsinline muted loop style="display:none"></video>
@@ -2103,7 +2112,7 @@ function syncUIToPost(){
   ui.classList.add('pixelate-'+px);
   ui.dataset.globalUiPixel = String(gup);
   ui.style.setProperty('--global-ui-pixel', String(gup));
-  ui.style.setProperty('--ui-scale', String(Math.max(0.84, Math.min(1, rs*1.06))));
+  ui.style.setProperty('--ui-scale', String(Math.max(1.5, Math.min(1.8, rs*2.3))));
   ui.style.filter = `contrast(${(1.0 + (1-rs)*0.08).toFixed(2)}) saturate(${(1.0 - Number(post.desaturate||0)*0.15).toFixed(2)})`;
   ui.style.letterSpacing = '';
   document.querySelectorAll('#ui, #ui *').forEach(el=>{
@@ -5374,6 +5383,16 @@ function drumOpen(){
 
 function drumStart(){
   if(!drumGame.waiting||drumGame.active) return;
+  // Block start until audio is buffered enough (readyState 3=HAVE_FUTURE_DATA, 4=HAVE_ENOUGH_DATA)
+  if(drumGame.preloadedAudio && drumGame.preloadedAudio.readyState < 3){
+    const c=document.getElementById('drum-canvas');
+    if(c){ const ctx=c.getContext('2d'); ctx.fillStyle='#0a0810'; ctx.fillRect(0,0,c.width,c.height);
+      ctx.fillStyle=DRUM_PAL.textHi||'#e8d5b0'; ctx.font='bold 14px "Pixellari",monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('loading song...', c.width/2, c.height/2);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic'; }
+    setTimeout(()=>{ if(drumGame.waiting&&!drumGame.active) drumStart(); }, 300);
+    return;
+  }
   drumGame.waiting=false;
   drumGame.finished=false;
   drumGame.score=0; drumGame.misses=0; drumGame.combo=0; drumGame.maxCombo=0;
@@ -7327,7 +7346,7 @@ let heldToyId=null;
 Object.defineProperty(window,'heldToyId',{get:()=>heldToyId,set:(v)=>{heldToyId=v;}});
 function getToyDisplayScale(id, baseScale){
   const scale=baseScale || 0.28;
-  if(id==='ball_toy') return scale * 3.0;
+  if(id==='ball_toy') return scale * 1.8;
   return PLUSH_BED_SLOTS[id] ? (scale * PLUSH_SCALE_FACTOR) : scale;
 }
 
@@ -7541,6 +7560,20 @@ ballGrp.add(ballMesh); ballGrp.add(ballStripe); ballGrp.add(ballStripe2);
 ballGrp.userData.isToy=true;
 addGrp('ball_toy',ballGrp);
 registerToy('ball_toy',ballGrp,'ball');
+// Restore ball visibility if previously unlocked (survives reload)
+(function(){
+  if(typeof progression!=='undefined' && Array.isArray(progression.unlockedRewards) && progression.unlockedRewards.includes('ball_toy')){
+    ballGrp.visible=true;
+    ballGrp.position.set(0.2, 0.12, 0.5);
+    ballGrp.rotation.set(0,0,0);
+    ballGrp.scale.setScalar(1);
+    if(typeof ballPhysics!=='undefined' && ballPhysics){
+      ballPhysics.active=false; ballPhysics.rest=true;
+      if(ballPhysics.vel) ballPhysics.vel.set(0,0,0);
+      if(ballPhysics.ang) ballPhysics.ang.set(0,0,0);
+    }
+  }
+})();
 // Replace the procedural ball with the shipping GLB when assets/models/rewards/ball_toy.glb is present.
 function loadBallToyGLB(){
   const src = ASSET_DEFAULTS?.models?.ball_toy || ASSET_DEFAULTS?.rewardModels?.ball_toy;
@@ -9348,8 +9381,7 @@ window.addEventListener('keydown',(e)=>{
   const tag=(document.activeElement&&document.activeElement.tagName||'').toLowerCase();
   if(tag==='input' || tag==='textarea' || tag==='select') return;
   if(e.key==='`'){
-    toggleFreeCam();
-    e.preventDefault();
+    if(location.search.includes('debug')){ toggleFreeCam(); e.preventDefault(); }
     return;
   }
   if(synthOpen || !freeCamActive) return;
@@ -10006,6 +10038,7 @@ function titleLoadGame(){
   setTimeout(()=>{
     if(splash) splash.style.opacity='0';
     titleScreen.style.opacity='1';
+    if(typeof window.__smLoadDismiss==='function') window.__smLoadDismiss();
     // Start room orbit
     let titleOrbiting=true;
     let titleOrbT=0;
@@ -10948,6 +10981,36 @@ function ensureGLTFLoader(done){
   document.head.appendChild(s);
 }
 
+
+// ── LOADING SCREEN MANAGER ──────────────────────────────────
+(function(){
+  const overlay=document.getElementById('loading-overlay');
+  const fill=document.getElementById('loading-bar-fill');
+  const status=document.getElementById('loading-status');
+  if(!overlay) return;
+  let total=0, done=0, dismissed=false;
+  window.__smLoadTrack=function(label){
+    total++;
+    if(fill) fill.style.width=Math.min(90,(done/Math.max(total,1))*100)+'%';
+    if(status) status.textContent='loading '+(label||'assets')+'...';
+    return function(){
+      done++;
+      const pct=Math.min(99,Math.round((done/Math.max(total,1))*100));
+      if(fill) fill.style.width=pct+'%';
+      if(done>=total) window.__smLoadDismiss();
+    };
+  };
+  window.__smLoadDismiss=function(){
+    if(dismissed) return; dismissed=true;
+    if(fill) fill.style.width='100%';
+    if(status) status.textContent='ready';
+    setTimeout(()=>{ overlay.style.opacity='0'; setTimeout(()=>{ overlay.style.display='none'; },850); },300);
+  };
+  // Safety: always dismiss after 10s
+  setTimeout(()=>{ window.__smLoadDismiss(); },10000);
+})();
+
+
 function resetExternalCharacter(){
   resetHandHoldAnchor();
   placeholderLines.forEach(l=>l.visible=true);
@@ -11021,6 +11084,7 @@ function updateAnimationDebugUI(){
 window.dbgPlayClip=function(name){ playGLBAnim(name); };
 
 function loadCharacterGLB(url, label='character.glb', revokeURL=false){
+  const _smDone=(typeof window.__smLoadTrack==='function')?window.__smLoadTrack(label):null;
   ensureGLTFLoader(()=>{
     const loader=new THREE.GLTFLoader(); if(THREE.__smDracoLoader&&loader.setDRACOLoader) loader.setDRACOLoader(THREE.__smDracoLoader);
     document.getElementById('drop-glb').textContent='loading '+label+'...';
@@ -11052,6 +11116,7 @@ function loadCharacterGLB(url, label='character.glb', revokeURL=false){
       }
       updateAnimationDebugUI();
       if(hatEquipped) equipHat(); // re-position hat for new character
+      if(_smDone) _smDone();
       if(revokeURL) URL.revokeObjectURL(url);
     },(prog)=>{
       const pct=prog.total?Math.round(prog.loaded/prog.total*100):0;
@@ -11085,6 +11150,7 @@ function removeGroupReplacement(targetName){
 window.dbgRemoveRoomGLB=function(){ const targetName=document.getElementById('d-roomglb-target').value; const status=document.getElementById('d-roomglb-status'); if(!targetName){ if(status) status.textContent='choose a room glb target first'; return; } removeGroupReplacement(targetName); if(status) status.textContent='removed custom glb for '+targetName; };
 window.dbgResetRoomGroup=function(){ const targetName=document.getElementById('d-roomglb-target').value; const status=document.getElementById('d-roomglb-status'); const grp=namedGroups[targetName]; const base=groupBaseTransforms[targetName]; if(!grp||!base){ if(status) status.textContent='no base transform for '+targetName; return; } grp.position.copy(base.pos); grp.rotation.copy(base.rot); grp.scale.copy(base.scale); if(status) status.textContent='reset transform for '+targetName; };
 function loadGroupGLB(url, targetName, label='room.glb', revokeURL=false, dataURL=null, onLoaded=null){
+  const _smDone=(typeof window.__smLoadTrack==='function')?window.__smLoadTrack(label):null;
   ensureGLTFLoader(()=>{
     const grp=namedGroups[targetName];
     if(!grp){ const s=document.getElementById('d-roomglb-status'); if(s) s.textContent='unknown group: '+targetName; return; }
@@ -11121,7 +11187,7 @@ function loadGroupGLB(url, targetName, label='room.glb', revokeURL=false, dataUR
       if(dataURL) modelRegistry[targetName]={fileName:label,dataURL:dataURL};
       else modelRegistry[targetName]={fileName:label};
       if(status) status.textContent='✓ '+label+' → '+targetName;
-      if(onLoaded) onLoaded(obj);
+      if(_smDone) _smDone(); if(onLoaded) onLoaded(obj);
       if(revokeURL) URL.revokeObjectURL(url);
     },undefined,(err)=>{
       if(status) status.textContent='error loading '+label;
@@ -11375,6 +11441,7 @@ function playGLBAnim(name){
 
 
 window.addEventListener('keydown', (e)=>{
+  if(!location.search.includes('debug')) return; // animation keys only in ?debug mode
   if(synthOpen||drumGame.active||drumGame.waiting) return;
   if(!glbClipNames.length) return;
   const idx=parseInt(e.key,10);
