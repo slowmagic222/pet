@@ -1006,12 +1006,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
     <img id="logo-splash-img" src="assets/ui/logo.png" alt="">
   </div>
 
-  <div id="loading-overlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#0a0a12;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Pixellari',monospace;transition:opacity 0.8s;">
-    <div style="color:#e8d5b0;font-size:clamp(11px,2vw,14px);letter-spacing:0.4em;text-transform:uppercase;margin-bottom:16px;">EMOTION ENGINE</div>
-    <div style="width:min(220px,60vw);height:6px;background:#1a1228;border:1px solid #3a2e4a;border-radius:1px;overflow:hidden;">
+  <div id="loading-overlay" onclick="if(typeof unlockTitleAudioFromGesture==='function') unlockTitleAudioFromGesture();" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Pixellari',monospace;transition:opacity 0.8s;">
+    <div style="color:#1a1228;font-size:clamp(11px,2vw,14px);letter-spacing:0.4em;text-transform:uppercase;margin-bottom:16px;">EMOTION ENGINE</div>
+    <div style="width:min(220px,60vw);height:6px;background:#e0d8f0;border:1px solid #c0b8d8;border-radius:1px;overflow:hidden;">
       <div id="loading-bar-fill" style="height:100%;width:0%;background:#e84a8a;transition:width 0.3s;border-radius:1px;"></div>
     </div>
-    <div id="loading-status" style="color:#6a5a7a;font-size:clamp(7px,1.4vw,9px);letter-spacing:0.2em;margin-top:10px;text-transform:uppercase;">loading...</div>
+    <div id="loading-status" style="color:#8a7a9a;font-size:clamp(7px,1.4vw,9px);letter-spacing:0.2em;margin-top:10px;text-transform:uppercase;">loading...</div>
   </div>
   <div id="title-screen">
     <!-- MAIN TITLE / MENU -->
@@ -2112,7 +2112,7 @@ function syncUIToPost(){
   ui.classList.add('pixelate-'+px);
   ui.dataset.globalUiPixel = String(gup);
   ui.style.setProperty('--global-ui-pixel', String(gup));
-  ui.style.setProperty('--ui-scale', String(Math.max(1.5, Math.min(1.8, rs*2.3))));
+  { const vw=window.innerWidth||screen.width; const maxByVp=vw<500?1.1:vw<768?1.25:1.5; ui.style.setProperty('--ui-scale', String(Math.max(1.1, Math.min(maxByVp, rs*2.0)))); }
   ui.style.filter = `contrast(${(1.0 + (1-rs)*0.08).toFixed(2)}) saturate(${(1.0 - Number(post.desaturate||0)*0.15).toFixed(2)})`;
   ui.style.letterSpacing = '';
   document.querySelectorAll('#ui, #ui *').forEach(el=>{
@@ -9038,8 +9038,11 @@ window.startGame=function(){
   setTimeout(()=>{ ts.style.opacity='0'; },850);
   setTimeout(()=>{ ts.style.display='none'; },2600);
 
-  // Fade out title music
+  // Fade out title music — hard stop after 3s for mobile browsers
   stopTitleMusicFade();
+  if(window._titleMusicEl){
+    try{ window._titleMusicEl.pause(); window._titleMusicEl.currentTime=0; }catch(_e){}
+  }
   if(window._titleMusicEl){
     const _tm=window._titleMusicEl;
     const _fade=setInterval(()=>{
@@ -9047,6 +9050,10 @@ window.startGame=function(){
       if(_tm.volume<=0){ clearInterval(_fade); _tm.pause(); _tm.src=''; window._titleMusicEl=null; titleMusicStarted=false; }
     }, 120);
   }
+  setTimeout(()=>{
+    if(window._titleMusicEl){ try{ window._titleMusicEl.pause(); window._titleMusicEl.src=''; }catch(_e){} window._titleMusicEl=null; titleMusicStarted=false; }
+    const trtr=document.getElementById('title-room-tone'); if(trtr){ try{ trtr.pause(); trtr.src=''; }catch(_e){} }
+  }, 1200);
   // Reset orbit offset and go directly to iso follow cam
   camOrbitX=0; camOrbitY=0; camZoom=0;
   camState='iso';
@@ -10033,7 +10040,8 @@ function titleLoadGame(){
   setTimeout(()=>{
     if(splash) splash.style.opacity='0';
     titleScreen.style.opacity='1';
-    if(typeof window.__smLoadDismiss==='function') window.__smLoadDismiss();
+    // Only dismiss loading overlay if no models are still loading; otherwise let tracker dismiss it
+    if(typeof window.__smLoadDismiss==='function' && typeof window.__smLoadPending==='function' && !window.__smLoadPending()) window.__smLoadDismiss();
     // Start room orbit
     let titleOrbiting=true;
     let titleOrbT=0;
@@ -10997,6 +11005,7 @@ function ensureGLTFLoader(done){
       if(done>=total) window.__smLoadDismiss();
     };
   };
+  window.__smLoadPending=function(){ return total>0 && done<total; };
   window.__smLoadDismiss=function(){
     if(dismissed) return; dismissed=true;
     if(fill) fill.style.width='100%';
