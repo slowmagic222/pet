@@ -728,12 +728,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 #inv-panel {
   position: relative;
   width: min(96vw, 600px);
-  max-height: 85vh;
+  max-height: 90vh;
   background: transparent;
   border: none;
-  padding: 24px 16px;
+  padding: 16px 8px;
   overflow-y: auto;
   z-index: 1;
+  box-sizing: border-box;
 }
 #inv-heading {
   font-family: 'Pixellari', monospace;
@@ -750,21 +751,21 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 .inv-section-label { display: none; }
 .inv-grid {
   display: grid;
-  grid-template-columns: repeat(6, 88px);
-  grid-template-rows: repeat(3, 88px);
-  gap: 6px;
+  grid-template-columns: repeat(6, min(88px, calc((min(96vw,600px) - 32px) / 6)));
+  grid-auto-rows: min(88px, calc((min(96vw,600px) - 32px) / 6));
+  gap: clamp(3px, 0.8vw, 6px);
   justify-content: center;
   margin-bottom: 6px;
 }
 .inv-card {
   position: relative;
-  width: 88px; height: 88px;
+  width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
   cursor: default;
   background: none; border: none;
 }
-.inv-canvas-wrap { width: 88px; height: 88px; position: relative; }
-.inv-canvas-wrap canvas { width: 88px !important; height: 88px !important; display: block; }
+.inv-canvas-wrap { width: 100%; height: 100%; position: relative; }
+.inv-canvas-wrap canvas { width: 100% !important; height: 100% !important; display: block; }
 .inv-q {
   position: absolute; top: 50%; left: 50%;
   transform: translate(-50%, -50%);
@@ -908,9 +909,9 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 .dbg-drop-zone.drag-over { border-color:#e84a8a; background:rgba(232,74,138,0.05); }
 
 #tv-media-url{width:100%;background:#1a1228;border:1px solid #2a1e3a;color:#e8d5b0;padding:5px 6px;font-size:9px;font-family:'Pixellari',monospace;border-radius:2px;}
-#gameboy-overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(31vw,224px);aspect-ratio:10/9;background:transparent;box-shadow:none;border:none;border-radius:0;display:none;z-index:420;pointer-events:auto;overflow:visible;padding:0;}
+#gameboy-overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(80vw,min(55vh,320px));aspect-ratio:10/9;background:transparent;box-shadow:none;border:none;border-radius:0;display:none;z-index:420;pointer-events:auto;overflow:visible;padding:0;}
 #gameboy-overlay canvas{width:100%;height:100%;display:block;background:transparent;image-rendering:pixelated;border:none;box-shadow:none;opacity:1;filter:none;}
-#gameboy-hint{position:absolute;left:50%;bottom:-22px;transform:translateX(-50%);font-size:12px;color:#d7dec7;letter-spacing:.12em;text-transform:uppercase;opacity:.92;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.7);}
+#gameboy-hint{position:absolute;left:50%;bottom:-38px;transform:translateX(-50%);font-size:9px;color:#d7dec7;letter-spacing:.1em;text-transform:uppercase;opacity:.85;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.7);white-space:nowrap;}
 #gameboy-close{position:absolute;right:2px;top:2px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.05);color:#d7dec7;font:inherit;font-size:12px;line-height:1;padding:3px 8px;border-radius:999px;cursor:pointer;pointer-events:auto;}
 
 
@@ -1032,11 +1033,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
       <div id="title-hint" style="display:none"></div>
     </div>
     <!-- TUTORIAL SLIDESHOW -->
-    <div id="tutorial-screen" style="display:none;opacity:0">
+    <div id="tutorial-screen" style="display:none;opacity:0;cursor:pointer;" onclick="tutorialNext()">
       <div id="tutorial-slides">
         <img id="tutorial-img" src="" alt="">
         <div id="tutorial-caption"></div>
       </div>
+      <div id="tutorial-tap-hint" style="color:#8a7a9a;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;text-align:center;margin-bottom:8px;opacity:0.6;font-family:'Pixellari',monospace;">tap anywhere to continue</div>
       <div id="tutorial-nav">
         <div id="tutorial-dots"></div>
         <button class="title-btn" id="tutorial-next-btn" onclick="tutorialNext()">NEXT →</button>
@@ -1162,11 +1164,13 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 
 
 <div id="gameboy-overlay"><button id="gameboy-close" type="button">x</button><canvas id="gameboy-canvas" width="240" height="216"></canvas><div id="gameboy-hint"></div>
-<div id="gameboy-mobile-btns">
-  <button class="gb-btn" ontouchstart="gbMobileBtn('left');event.preventDefault()">◄</button>
-  <button class="gb-btn" ontouchstart="gbMobileBtn('spin');event.preventDefault()">↻</button>
-  <button class="gb-btn" ontouchstart="gbMobileBtn('right');event.preventDefault()">►</button>
+<div id="gameboy-mobile-btns" style="gap:14px;margin-top:12px;flex-wrap:wrap;justify-content:center;width:100%;max-width:320px;align-self:center;">
+  <button class="gb-btn" ontouchstart="gbMobileBtn('left');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">◄</button>
+  <button class="gb-btn" ontouchstart="gbMobileBtn('spin');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">↻</button>
+  <button class="gb-btn" ontouchstart="gbMobileBtn('drop');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">▼</button>
+  <button class="gb-btn" ontouchstart="gbMobileBtn('right');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">►</button>
 </div>
+<div id="gameboy-key-hint" style="color:#8bac0f;font-family:'Pixellari',monospace;font-size:9px;letter-spacing:0.15em;text-align:center;margin-top:8px;opacity:0.7;text-transform:uppercase;pointer-events:none;">← → move &nbsp;|&nbsp; ↑/Z spin &nbsp;|&nbsp; ↓ drop</div>
 </div>
 <video id="tv-video" crossorigin="anonymous" playsinline muted loop style="display:none"></video>
 <audio id="tv-audio" crossorigin="anonymous" loop style="display:none"></audio>
@@ -5485,7 +5489,6 @@ function drumUpdate(){
     }
   });
   if(elapsed>=totalDuration){ drumGame.finished=true; drumFinish(); return; }
-  drumTickMetronome(elapsed); // subtle beat click
   drumDraw(elapsed);
 }
 
@@ -7493,6 +7496,7 @@ window.gbMobileBtn=function(dir){
   if(dir==='left'){ if(gameCanPlace(gameboyGame.piece.x-1,gameboyGame.piece.y)){ gameboyGame.piece.x--; gameboyBeep('move'); } }
   else if(dir==='right'){ if(gameCanPlace(gameboyGame.piece.x+1,gameboyGame.piece.y)){ gameboyGame.piece.x++; gameboyBeep('move'); } }
   else if(dir==='spin'){ const rot=rotateShape(gameboyGame.piece.shape); if(gameCanPlace(gameboyGame.piece.x,gameboyGame.piece.y,rot)){ gameboyGame.piece.shape=rot; gameboyBeep('rotate'); } }
+  else if(dir==='drop'){ while(gameCanPlace(gameboyGame.piece.x,gameboyGame.piece.y+1)){ gameboyGame.piece.y++; } gameboyGame.lockDelay=0; gameboyBeep('drop'); }
 };
 
 // Mobile drum controls
@@ -8786,7 +8790,7 @@ function finishProduction(){
     }
   }
   const roomReward = pickNextReward();
-  const deliverSpot=new THREE.Vector3(0.6,0,1.2);
+  const _isCDReward = mediaReward && mediaReward.type !== 'vhs';
 
   if(mediaReward){
     setProducedRewardVisual(mediaReward);
@@ -8813,9 +8817,12 @@ function finishProduction(){
     setTimeout(()=>{dn.style.opacity='0';},4000);
   }
 
-  buildWalkPath(deliverSpot, deliverSpot);
+  // Walk to CD player / side table, insert disk, then auto-play
+  const tableWP=new THREE.Vector3(); tableGrp.getWorldPosition(tableWP);
+  const cdApproach=getApproachPoint(tableGrp, 1.3, 0.0);
+  buildWalkPath(cdApproach, tableGrp.position);
   pendingAction=()=>{
-    faceToward(new THREE.Vector3(0,0,5));
+    faceToward(tableGrp);
     setCharState('interact');
     setTimeout(()=>{
       state.heldItem=null;
@@ -8824,27 +8831,38 @@ function finishProduction(){
       scene.add(prodDiskGrp);
       prodDiskGrp.visible=!!mediaReward;
       prodDiskGrp.scale.setScalar(prodDiskGrp.userData.visualScale||1.0);
-
       const handWP=new THREE.Vector3(); getCarryAnchor().getWorldPosition(handWP);
       prodDiskGrp.position.copy(handWP);
       prodDiskGrp.rotation.set(Math.PI/2,0,0.2);
-      const deskWP=new THREE.Vector3(); deskGrp.getWorldPosition(deskWP);
       if(mediaReward){
-        throwObjectToFloor(prodDiskGrp, new THREE.Vector3(deskWP.x-0.2,0,deskWP.z+0.3), 0.82, 'prod_disk');
-        pulseGlow(prodDiskGrp, mediaReward.type==='vhs' ? 0x4488ff : 0xe84a8a, 8000);
+        // Place disk near CD player
+        throwObjectToFloor(prodDiskGrp, new THREE.Vector3(tableWP.x+0.2, 0, tableWP.z+0.5), 0.65, 'prod_disk');
+        pulseGlow(prodDiskGrp, mediaReward.type==='vhs' ? 0x4488ff : 0xe84a8a, 5000);
         if(!progression.unlockedRewards.includes(mediaReward.id)) progression.unlockedRewards.push(mediaReward.id);
-        speak(mediaReward.type==='vhs' ? "made you a tape." : "made you something.");
+        speak(_isCDReward ? "putting it on." : "made you a tape.");
         saveProgression();
+        // If it's a CD reward, auto-play it in the CD player after a short delay
+        if(_isCDReward){
+          setTimeout(()=>{
+            try{
+              const diskId=normalizeDiskId(mediaReward.id);
+              if(window.cdp && typeof cdp.playDisk==='function'){
+                cdp.playDisk(diskId);
+              } else if(typeof insertAndPlayDisk==='function'){
+                insertAndPlayDisk(diskId);
+              }
+            }catch(_e){}
+          }, 1200);
+        }
       } else {
         prodDiskGrp.visible=false;
         speak("finished something.");
       }
-
       setCharState('idle');
       endDedicatedTask('produce');
       saveState(); saveProgression();
       if(roomReward) setTimeout(()=>spawnRewardPackage(roomReward.id, roomReward), 30000);
-    },600);
+    }, 600);
   };
   setCharState('walking');
 }
@@ -9038,22 +9056,24 @@ window.startGame=function(){
   setTimeout(()=>{ ts.style.opacity='0'; },850);
   setTimeout(()=>{ ts.style.display='none'; },2600);
 
-  // Fade out title music — hard stop after 3s for mobile browsers
+  // Fade out title music smoothly, then hard-stop at end (works on mobile too)
   stopTitleMusicFade();
   if(window._titleMusicEl){
-    try{ window._titleMusicEl.pause(); window._titleMusicEl.currentTime=0; }catch(_e){}
-  }
-  if(window._titleMusicEl){
     const _tm=window._titleMusicEl;
+    const _startVol=_tm.volume||0.5;
+    let _t=0;
+    const _fadeDur=1800; // ms
+    const _step=30;
     const _fade=setInterval(()=>{
-      _tm.volume=Math.max(0,_tm.volume-0.015);
-      if(_tm.volume<=0){ clearInterval(_fade); _tm.pause(); _tm.src=''; window._titleMusicEl=null; titleMusicStarted=false; }
-    }, 120);
+      _t+=_step;
+      _tm.volume=Math.max(0,_startVol*(1-_t/_fadeDur));
+      if(_t>=_fadeDur){ clearInterval(_fade); try{_tm.pause();_tm.src='';}catch(_e){} window._titleMusicEl=null; titleMusicStarted=false; }
+    }, _step);
   }
+  // Also fade out room tone
   setTimeout(()=>{
-    if(window._titleMusicEl){ try{ window._titleMusicEl.pause(); window._titleMusicEl.src=''; }catch(_e){} window._titleMusicEl=null; titleMusicStarted=false; }
     const trtr=document.getElementById('title-room-tone'); if(trtr){ try{ trtr.pause(); trtr.src=''; }catch(_e){} }
-  }, 1200);
+  }, 1800);
   // Reset orbit offset and go directly to iso follow cam
   camOrbitX=0; camOrbitY=0; camZoom=0;
   camState='iso';
@@ -9976,6 +9996,7 @@ function tutorialShowSlide(i){
   if(img) img.src=s.img;
   if(cap) cap.textContent=s.caption;
   if(btn) btn.textContent=i>=TUTORIAL_SLIDES.length-1?'START →':'NEXT →';
+  const hint=document.getElementById('tutorial-tap-hint'); if(hint) hint.style.opacity='0.6';
   if(dots){
     dots.innerHTML='';
     TUTORIAL_SLIDES.forEach((_,di)=>{
