@@ -7566,6 +7566,7 @@ addGrp('ball_toy',ballGrp);
 registerToy('ball_toy',ballGrp,'ball');
 // Replace the procedural ball with the shipping GLB when assets/models/rewards/ball_toy.glb is present.
 function loadBallToyGLB(){
+  const _smDone=(typeof window.__smLoadTrack==='function')?window.__smLoadTrack('ball_toy.glb'):null;
   const src = ASSET_DEFAULTS?.models?.ball_toy || ASSET_DEFAULTS?.rewardModels?.ball_toy;
   if(!src) return;
   ensureGLTFLoader(()=>{
@@ -7587,8 +7588,9 @@ function loadBallToyGLB(){
       ballGrp.add(obj);
       ballGrp.userData.normalizedScale = 1;
       rewardModelRegistry['ball_toy'] = obj.clone(true);
+      if(_smDone) _smDone();
       if(typeof updateInventory==='function') updateInventory();
-    }, undefined, ()=>{ console.warn('[SM] ball_toy GLB not found; keeping procedural fallback'); });
+    }, undefined, ()=>{ if(_smDone) _smDone(); console.warn('[SM] ball_toy GLB not found; keeping procedural fallback'); });
   });
 }
 setTimeout(loadBallToyGLB, 150);
@@ -10061,8 +10063,8 @@ function titleLoadGame(){
   setTimeout(()=>{
     if(splash) splash.style.opacity='0';
     titleScreen.style.opacity='1';
-    // Only dismiss loading overlay if no models are still loading; otherwise let tracker dismiss it
-    if(typeof window.__smLoadDismiss==='function' && typeof window.__smLoadPending==='function' && !window.__smLoadPending()) window.__smLoadDismiss();
+    // Signal that splash is done — loading overlay will dismiss when all loads complete
+    if(typeof window.__smLoadDismissIfReady==='function') window.__smLoadDismissIfReady();
     // Start room orbit
     let titleOrbiting=true;
     let titleOrbT=0;
@@ -11012,29 +11014,73 @@ function ensureGLTFLoader(done){
   const fill=document.getElementById('loading-bar-fill');
   const status=document.getElementById('loading-status');
   if(!overlay) return;
+
   let total=0, done=0, dismissed=false;
-  // Show immediate progress so bar doesn't look stuck
-  if(fill) fill.style.width='8%';
+  let settingsReceived=false; // set true once settings.json has fired loadGroupGLB calls
+  let minTimeReached=false;   // minimum 2s display time
+  let readyToCheck=false;     // don't dismiss before settings.json has been processed
+
+  // Minimum display time so loading screen never just flashes
+  setTimeout(()=>{ minTimeReached=true; tryDismiss(); }, 800);
+
+  // Give settings.json fetch ~4s to register its GLB calls before we start checking
+  // If total is still 0 after that, something went wrong — use hard timeout
+  setTimeout(()=>{ settingsReceived=true; readyToCheck=true; tryDismiss(); }, 1500);
+
+  // Absolute hard timeout — always dismiss after 18s (covers slow iPad connections)
+  setTimeout(()=>{ forceDismiss(); }, 18000);
+
+  if(fill) fill.style.width='6%';
+
+  function tryDismiss(){
+    if(dismissed) return;
+    if(!minTimeReached) return;
+    if(!readyToCheck) return;
+    if(total > 0 && done < total) return; // still waiting on tracked loads
+    window.__smLoadDismiss();
+  }
+
+  function forceDismiss(){
+    if(dismissed) return;
+    console.warn('[SM] Loading overlay hard timeout — forcing dismiss');
+    window.__smLoadDismiss();
+  }
+
   window.__smLoadTrack=function(label){
     total++;
-    if(fill) fill.style.width=Math.min(90,(done/Math.max(total,1))*100)+'%';
+    settingsReceived=true; readyToCheck=false; // reset: wait for this batch to complete
+    const pct=Math.max(8, Math.min(85, Math.round((done/Math.max(total,1))*100)));
+    if(fill) fill.style.width=pct+'%';
     if(status) status.textContent='loading '+(label||'assets')+'...';
-    return function(){
+    return function onDone(){
       done++;
-      const pct=Math.min(99,Math.round((done/Math.max(total,1))*100));
-      if(fill) fill.style.width=pct+'%';
-      if(done>=total) window.__smLoadDismiss();
+      const pct2=Math.min(98, Math.round((done/Math.max(total,1))*100));
+      if(fill) fill.style.width=pct2+'%';
+      if(done>=total){
+        readyToCheck=true;
+        if(status) status.textContent='ready';
+        tryDismiss();
+      }
     };
   };
+
   window.__smLoadPending=function(){ return total>0 && done<total; };
+
   window.__smLoadDismiss=function(){
     if(dismissed) return; dismissed=true;
     if(fill) fill.style.width='100%';
     if(status) status.textContent='ready';
-    setTimeout(()=>{ overlay.style.opacity='0'; setTimeout(()=>{ overlay.style.display='none'; },850); },300);
+    setTimeout(()=>{
+      overlay.style.opacity='0';
+      setTimeout(()=>{ overlay.style.display='none'; }, 850);
+    }, 200);
   };
-  // Safety: always dismiss after 10s
-  setTimeout(()=>{ window.__smLoadDismiss(); },10000);
+
+  // Called by splash-fade: only dismiss if all loads are done
+  window.__smLoadDismissIfReady=function(){
+    settingsReceived=true; readyToCheck=true;
+    tryDismiss();
+  };
 })();
 
 
@@ -11151,6 +11197,7 @@ function loadCharacterGLB(url, label='character.glb', revokeURL=false){
     },(err)=>{
       document.getElementById('drop-glb').textContent='error loading '+label;
       console.error('[SM] GLB error:', err);
+      if(_smDone) _smDone(); // release loading screen even on error
       if(revokeURL) URL.revokeObjectURL(url);
     });
   });
@@ -11180,7 +11227,7 @@ function loadGroupGLB(url, targetName, label='room.glb', revokeURL=false, dataUR
   const _smDone=(typeof window.__smLoadTrack==='function')?window.__smLoadTrack(label):null;
   ensureGLTFLoader(()=>{
     const grp=namedGroups[targetName];
-    if(!grp){ const s=document.getElementById('d-roomglb-status'); if(s) s.textContent='unknown group: '+targetName; return; }
+    if(!grp){ const s=document.getElementById('d-roomglb-status'); if(s) s.textContent='unknown group: '+targetName; if(_smDone) _smDone(); return; }
 
     const loader=new THREE.GLTFLoader(); if(THREE.__smDracoLoader&&loader.setDRACOLoader) loader.setDRACOLoader(THREE.__smDracoLoader);
     const status=document.getElementById('d-roomglb-status'); if(status) status.textContent='loading '+label+' → '+targetName+'...';
@@ -15579,7 +15626,14 @@ window.addEventListener('keyup', synthGameKeyUp, true);
   setTimeout(makeDeskItemsFallback, 250);
   setTimeout(()=>{
     if(typeof ASSET_DEFAULTS!=='undefined' && ASSET_DEFAULTS.models && ASSET_DEFAULTS.models.desk_items_group && typeof loadGroupGLB==='function'){
-      try{ loadGroupGLB(ASSET_DEFAULTS.models.desk_items_group, 'desk_items_group', 'desk_items.glb', false, null); }catch(e){}
+      // Use HEAD request to check if file exists before tracking it in the loading screen
+      try{
+        const _deskUrl=ASSET_DEFAULTS.models.desk_items_group;
+        fetch(_deskUrl, {method:'HEAD'}).then(r=>{
+          if(r.ok) loadGroupGLB(_deskUrl, 'desk_items_group', 'desk_items.glb', false, null);
+          // if not found, silently skip — makeDeskItemsFallback already created procedural version
+        }).catch(()=>{});
+      }catch(e){}
     }
   }, 650);
 })();
