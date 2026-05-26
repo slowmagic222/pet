@@ -11774,7 +11774,7 @@ const ASSET_DEFAULTS = {
   // These take priority over settings.json fileName values
   models: {
     desk_group:      'assets/models/home_studio.glb',
-    desk_items_group:'assets/models/desk_items.glb', // optional paper + pencils desk prop
+    // desk_items_group disabled
     tv_group:        'assets/models/crt-tv.glb',
     sidetable_group: 'assets/models/panasonic_sa-pm02_stereo_system.glb',
     fridge_group:    'assets/models/vending_machine.glb',
@@ -15584,59 +15584,7 @@ function synthGameKeyUp(e){
 window.addEventListener('keydown', synthGameKeyDown, true);
 window.addEventListener('keyup', synthGameKeyUp, true);
 
-// ===== BETA HOTFIX: desk paper/pencils prop + selector visibility =====
-(function(){
-  function makeDeskItemsFallback(){
-    if(window.namedGroups && namedGroups.desk_items_group) return;
-    if(typeof THREE==='undefined' || typeof scene==='undefined') return;
-    const g=new THREE.Group();
-    g.name='desk_items_group';
-    g.userData.isDeskItems=true;
-    const paperMat=new THREE.MeshStandardMaterial({color:0xf1ead7, roughness:0.85});
-    const paper=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.018,0.30), paperMat);
-    paper.position.set(0,0.012,0);
-    paper.rotation.y=-0.14;
-    paper.castShadow=true; paper.receiveShadow=true;
-    g.add(paper);
-    const pencilMat=new THREE.MeshStandardMaterial({color:0xd6a34a, roughness:0.65});
-    const leadMat=new THREE.MeshStandardMaterial({color:0x2b2530, roughness:0.75});
-    for(let i=0;i<2;i++){
-      const pencil=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.48,8), pencilMat);
-      pencil.rotation.z=Math.PI/2;
-      pencil.rotation.y=0.55+(i*0.22);
-      pencil.position.set(0.02+i*0.055,0.045,-0.02+i*0.055);
-      pencil.castShadow=true; pencil.receiveShadow=true;
-      g.add(pencil);
-      const tip=new THREE.Mesh(new THREE.ConeGeometry(0.014,0.045,8), leadMat);
-      tip.rotation.z=-Math.PI/2;
-      tip.rotation.y=pencil.rotation.y;
-      tip.position.set(pencil.position.x+0.22*Math.cos(pencil.rotation.y), pencil.position.y, pencil.position.z-0.22*Math.sin(pencil.rotation.y));
-      tip.castShadow=true; tip.receiveShadow=true;
-      g.add(tip);
-    }
-    g.position.set(-1.78, 1.84, -2.92);
-    g.rotation.set(0, -0.08, 0);
-    g.scale.setScalar(1.0);
-    scene.add(g);
-    namedGroups.desk_items_group=g;
-    namedObjects.desk_items_group=g;
-    if(typeof refreshNamedGroupSelectors==='function') refreshNamedGroupSelectors('desk_items_group');
-    if(typeof groupBaseTransforms!=='undefined') groupBaseTransforms.desk_items_group={pos:g.position.clone(),rot:g.rotation.clone(),scale:g.scale.clone()};
-  }
-  setTimeout(makeDeskItemsFallback, 250);
-  setTimeout(()=>{
-    if(typeof ASSET_DEFAULTS!=='undefined' && ASSET_DEFAULTS.models && ASSET_DEFAULTS.models.desk_items_group && typeof loadGroupGLB==='function'){
-      // Use HEAD request to check if file exists before tracking it in the loading screen
-      try{
-        const _deskUrl=ASSET_DEFAULTS.models.desk_items_group;
-        fetch(_deskUrl, {method:'HEAD'}).then(r=>{
-          if(r.ok) loadGroupGLB(_deskUrl, 'desk_items_group', 'desk_items.glb', false, null);
-          // if not found, silently skip — makeDeskItemsFallback already created procedural version
-        }).catch(()=>{});
-      }catch(e){}
-    }
-  }, 650);
-})();
+// desk_items_group disabled
 
 </script>
 
