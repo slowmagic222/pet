@@ -372,7 +372,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 
 /* ── LOGO SPLASH ──────────────────────────────────────────── */
 #logo-splash {
-  position:fixed; inset:0; z-index:1000;
+  position:fixed; inset:0; z-index:10000;
   background:#ffffff;
   display:flex; align-items:center; justify-content:center;
   pointer-events:all;
@@ -1007,12 +1007,20 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
     <img id="logo-splash-img" src="assets/ui/logo.png" alt="">
   </div>
 
-  <div id="loading-overlay" onclick="if(typeof unlockTitleAudioFromGesture==='function') unlockTitleAudioFromGesture();" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Pixellari',monospace;transition:opacity 0.8s;">
-    <div style="color:#1a1228;font-size:clamp(11px,2vw,14px);letter-spacing:0.4em;text-transform:uppercase;margin-bottom:16px;">EMOTION ENGINE</div>
-    <div style="width:min(220px,60vw);height:6px;background:#e0d8f0;border:1px solid #c0b8d8;border-radius:1px;overflow:hidden;">
-      <div id="loading-bar-fill" style="height:100%;width:0%;background:#e84a8a;transition:width 0.3s;border-radius:1px;"></div>
+  <div id="loading-overlay" onclick="if(typeof unlockTitleAudioFromGesture==='function') unlockTitleAudioFromGesture();" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#ffffff;z-index:9999;display:flex;flex-direction:column;align-items:stretch;font-family:'Pixellari',monospace;transition:opacity 0.8s;opacity:0;">
+    <!-- Slideshow area -->
+    <div id="lo-slide-wrap" style="flex:1;position:relative;overflow:hidden;background:#f5f0ff;">
+      <img id="lo-slide-img" src="" alt="" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;transition:opacity 0.6s;opacity:0;">
+      <div id="lo-slide-caption" style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px 10px;background:linear-gradient(transparent,rgba(26,18,40,0.72));color:#f0e8ff;font-size:clamp(9px,2vw,13px);letter-spacing:0.1em;line-height:1.5;text-align:center;"></div>
     </div>
-    <div id="loading-status" style="color:#8a7a9a;font-size:clamp(7px,1.4vw,9px);letter-spacing:0.2em;margin-top:10px;text-transform:uppercase;">loading...</div>
+    <!-- Bottom bar -->
+    <div style="background:#fff;padding:14px 20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div style="color:#1a1228;font-size:clamp(9px,1.8vw,12px);letter-spacing:0.35em;text-transform:uppercase;">EMOTION ENGINE</div>
+      <div style="width:min(280px,70vw);height:5px;background:#e0d8f0;border:1px solid #c0b8d8;border-radius:2px;overflow:hidden;">
+        <div id="loading-bar-fill" style="height:100%;width:0%;background:#e84a8a;transition:width 0.4s;border-radius:2px;"></div>
+      </div>
+      <div id="loading-status" style="color:#8a7a9a;font-size:clamp(7px,1.4vw,9px);letter-spacing:0.2em;text-transform:uppercase;">loading...</div>
+    </div>
   </div>
   <div id="title-screen">
     <!-- MAIN TITLE / MENU -->
@@ -10062,7 +10070,10 @@ function titleLoadGame(){
   // Step 3: Hold, then fade white to transparent revealing room + title
   setTimeout(()=>{
     if(splash) splash.style.opacity='0';
-    titleScreen.style.opacity='1';
+    // Reveal loading slideshow as logo fades out
+    const _lo=document.getElementById('loading-overlay');
+    if(_lo){ _lo.style.opacity='1'; }
+    // Don't show title screen yet — loading overlay covers it until ready
     // Signal that splash is done — loading overlay will dismiss when all loads complete
     if(typeof window.__smLoadDismissIfReady==='function') window.__smLoadDismissIfReady();
     // Start room orbit
@@ -10078,11 +10089,26 @@ function titleLoadGame(){
     // Step 4: Remove splash, show menu
     setTimeout(()=>{
       if(splash){ splash.style.pointerEvents='none'; splash.style.display='none'; }
-      const menu=document.getElementById('title-menu');
-      if(menu){ menu.style.display='flex'; requestAnimationFrame(()=>menu.style.opacity='1'); }
-      const hasSave=!!(localStorage.getItem('sm_v12')||localStorage.getItem('sm_progression_v1'));
-      const loadBtn=document.getElementById('btn-load');
-      if(loadBtn){ loadBtn.style.opacity=hasSave?'1':'0.3'; loadBtn.style.pointerEvents=hasSave?'all':'none'; }
+      // Delay title menu until loading overlay is dismissed
+      function _showTitleMenu(){
+        const menu=document.getElementById('title-menu');
+        if(menu){ menu.style.display='flex'; requestAnimationFrame(()=>menu.style.opacity='1'); }
+        const hasSave=!!(localStorage.getItem('sm_v12')||localStorage.getItem('sm_progression_v1'));
+        const loadBtn=document.getElementById('btn-load');
+        if(loadBtn){ loadBtn.style.opacity=hasSave?'1':'0.3'; loadBtn.style.pointerEvents=hasSave?'all':'none'; }
+      }
+      const _lo=document.getElementById('loading-overlay');
+      if(_lo && _lo.style.display!=='none' && _lo.style.opacity!=='0'){
+        // Poll until overlay is gone
+        const _poll=setInterval(()=>{
+          const lo2=document.getElementById('loading-overlay');
+          if(!lo2 || lo2.style.display==='none' || lo2.style.opacity==='0'){
+            clearInterval(_poll); _showTitleMenu();
+          }
+        }, 200);
+      } else {
+        _showTitleMenu();
+      }
     }, 1300);
     // Override startGame
     const _origStart=window.startGame;
@@ -11024,42 +11050,71 @@ function ensureGLTFLoader(done){
   const status=document.getElementById('loading-status');
   if(!overlay) return;
 
+  // ── Slideshow ────────────────────────────────────────────────
+  const SLIDES=[
+    {img:'assets/ui/tutorial1.png', caption:'Welcome to Slow Magic’s room'},
+    {img:'assets/ui/tutorial2.png', caption:'He is experiencing writer’s block — your goal is to help him get inspired'},
+    {img:'assets/ui/tutorial3.png', caption:'Try clicking or tapping on items in the room to guide him'},
+    {img:'assets/ui/tutorial4.png', caption:'Click his backpack to check on your collection'},
+    {img:'assets/ui/tutorial5.png', caption:'Click and drag to move camera · scroll or pinch to zoom'},
+  ];
+  let _slideIdx=0, _slideTimer=null;
+  const _slideImg=document.getElementById('lo-slide-img');
+  const _slideCap=document.getElementById('lo-slide-caption');
+  function _showSlide(i){
+    const s=SLIDES[i%SLIDES.length];
+    if(_slideImg){ _slideImg.style.opacity='0'; setTimeout(()=>{ _slideImg.src=s.img; _slideImg.style.opacity='1'; },300); }
+    if(_slideCap) _slideCap.textContent=s.caption;
+  }
+  function _startSlideshow(){
+    _showSlide(0);
+    _slideTimer=setInterval(()=>{ _slideIdx=(_slideIdx+1)%SLIDES.length; _showSlide(_slideIdx); }, 3500);
+  }
+  function _stopSlideshow(){ if(_slideTimer){ clearInterval(_slideTimer); _slideTimer=null; } }
+  // Start slideshow after a short delay so logo sting plays first
+  setTimeout(_startSlideshow, 800);
+  // ────────────────────────────────────────────────────────────
+
   let total=0, done=0, dismissed=false;
-  // Two explicit gates that must both be signalled before we can dismiss:
-  //   gate1 = character GLB load has been registered (fires ~50ms after page load)
-  //   gate2 = settings.json has been processed and its GLBs registered (fires after fetch)
-  let gate1=false, gate2=false;
+  // queued=true once all expected loads have been registered (both char + settings models).
+  // We must not dismiss until queued=true AND done>=total AND done>0.
+  let charQueued=false;   // set when loadCharacterGLB is called
+  let settingsQueued=false; // set when settings.json models are all registered
 
   if(fill) fill.style.width='6%';
 
-  // Hard timeout — always escape after 20s no matter what
+  // Hard timeout — always escape after 25s
   const _hardTimeout=setTimeout(()=>{
     console.warn('[SM] loading hard timeout — forcing dismiss');
     _dismiss();
-  }, 20000);
+  }, 25000);
 
   function _tryDismiss(){
     if(dismissed) return;
-    if(!gate1 || !gate2) return;       // both gates must be open
-    if(done < total) return;           // all registered loads must finish
+    if(!charQueued || !settingsQueued) return;  // still waiting to even know what to load
+    if(total === 0) return;                      // nothing was tracked yet — too early
+    if(done < total) return;                     // loads still in flight
     _dismiss();
   }
 
   function _dismiss(){
     if(dismissed) return; dismissed=true;
     clearTimeout(_hardTimeout);
+    _stopSlideshow();
     if(fill) fill.style.width='100%';
     if(status) status.textContent='ready';
     setTimeout(()=>{
       overlay.style.opacity='0';
+      // Reveal title screen as overlay fades out
+      const _ts=document.getElementById('title-screen');
+      if(_ts){ _ts.style.opacity='1'; }
       setTimeout(()=>{ overlay.style.display='none'; }, 850);
-    }, 150);
+    }, 400);
   }
 
   window.__smLoadTrack=function(label){
     total++;
-    const pct=Math.max(8, Math.min(85, Math.round((done/Math.max(total,1))*100)));
-    if(fill) fill.style.width=pct+'%';
+    if(fill) fill.style.width=Math.max(8, Math.min(85, Math.round((done/Math.max(total,1))*100)))+'%';
     if(status) status.textContent='loading '+(label||'assets')+'...';
     return function onDone(){
       done++;
@@ -11069,12 +11124,12 @@ function ensureGLTFLoader(done){
     };
   };
 
-  // Gate 1: signal that character GLB load has been queued
-  window.__smGate1=function(){ gate1=true; _tryDismiss(); };
-  // Gate 2: signal that settings.json models have all been queued
-  window.__smGate2=function(){ gate2=true; _tryDismiss(); };
+  // Called after loadCharacterGLB is invoked (not when it completes — the track handles that)
+  window.__smGate1=function(){ charQueued=true; _tryDismiss(); };
+  // Called after all settings.json loadGroupGLB calls are invoked
+  window.__smGate2=function(){ settingsQueued=true; _tryDismiss(); };
 
-  window.__smLoadPending=function(){ return !gate1||!gate2||done<total; };
+  window.__smLoadPending=function(){ return !charQueued||!settingsQueued||done<total; };
   window.__smLoadDismiss=function(){ _dismiss(); };
   window.__smLoadDismissIfReady=function(){ _tryDismiss(); };
 })();
