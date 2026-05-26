@@ -10098,10 +10098,17 @@ function titleLoadGame(){
 // Auto-load character GLB from assets/models/
 setTimeout(()=>{
   if(!externalCharacter){
-    if(location.protocol==='file:'){ console.log('[SM] file:// mode; manual character drop required'); }
-    else { loadCharacterGLB(ASSET_DEFAULTS.character, 'character.glb'); }
+    if(location.protocol==='file:'){
+      console.log('[SM] file:// mode; manual character drop required');
+      if(typeof window.__smGate1==='function') window.__smGate1(); // no char to wait for
+    } else {
+      loadCharacterGLB(ASSET_DEFAULTS.character, 'character.glb');
+    }
+  } else {
+    if(typeof window.__smGate1==='function') window.__smGate1(); // already loaded
   }
-}, 50);
+  if(typeof window.__smGate1==='function') window.__smGate1();
+}, 60);
 
 // Auto-load settings:
 // 1. Always fetch settings.json first for assets (models, textures)
@@ -10125,6 +10132,7 @@ setTimeout(()=>{
           MEDIA_SETTINGS_GROUP_KEYS.forEach(key=>{ delete noAssets.objects[key]; });
         }
         applySettings(noAssets);
+        if(typeof window.__smGate2==='function') window.__smGate2();
       }
     }catch(e){console.warn('[SM] localStorage settings error',e);}
   }
@@ -10581,6 +10589,7 @@ PET_SFX_IDS.forEach(k=>{
       })
       .catch(e=>{
         console.warn('[SM] could not load settings.json — falling back to localStorage',e);
+        if(typeof window.__smGate2==='function') window.__smGate2();
         // No settings.json — use localStorage for everything
         try{
           const saved=localStorage.getItem('sm_default_settings');
@@ -11016,71 +11025,58 @@ function ensureGLTFLoader(done){
   if(!overlay) return;
 
   let total=0, done=0, dismissed=false;
-  let settingsReceived=false; // set true once settings.json has fired loadGroupGLB calls
-  let minTimeReached=false;   // minimum 2s display time
-  let readyToCheck=false;     // don't dismiss before settings.json has been processed
-
-  // Minimum display time so loading screen never just flashes
-  setTimeout(()=>{ minTimeReached=true; tryDismiss(); }, 800);
-
-  // Give settings.json fetch ~4s to register its GLB calls before we start checking
-  // If total is still 0 after that, something went wrong — use hard timeout
-  setTimeout(()=>{ settingsReceived=true; readyToCheck=true; tryDismiss(); }, 1500);
-
-  // Absolute hard timeout — always dismiss after 18s (covers slow iPad connections)
-  setTimeout(()=>{ forceDismiss(); }, 18000);
+  // Two explicit gates that must both be signalled before we can dismiss:
+  //   gate1 = character GLB load has been registered (fires ~50ms after page load)
+  //   gate2 = settings.json has been processed and its GLBs registered (fires after fetch)
+  let gate1=false, gate2=false;
 
   if(fill) fill.style.width='6%';
 
-  function tryDismiss(){
+  // Hard timeout — always escape after 20s no matter what
+  const _hardTimeout=setTimeout(()=>{
+    console.warn('[SM] loading hard timeout — forcing dismiss');
+    _dismiss();
+  }, 20000);
+
+  function _tryDismiss(){
     if(dismissed) return;
-    if(!minTimeReached) return;
-    if(!readyToCheck) return;
-    if(total > 0 && done < total) return; // still waiting on tracked loads
-    window.__smLoadDismiss();
+    if(!gate1 || !gate2) return;       // both gates must be open
+    if(done < total) return;           // all registered loads must finish
+    _dismiss();
   }
 
-  function forceDismiss(){
-    if(dismissed) return;
-    console.warn('[SM] Loading overlay hard timeout — forcing dismiss');
-    window.__smLoadDismiss();
-  }
-
-  window.__smLoadTrack=function(label){
-    total++;
-    settingsReceived=true; readyToCheck=false; // reset: wait for this batch to complete
-    const pct=Math.max(8, Math.min(85, Math.round((done/Math.max(total,1))*100)));
-    if(fill) fill.style.width=pct+'%';
-    if(status) status.textContent='loading '+(label||'assets')+'...';
-    return function onDone(){
-      done++;
-      const pct2=Math.min(98, Math.round((done/Math.max(total,1))*100));
-      if(fill) fill.style.width=pct2+'%';
-      if(done>=total){
-        readyToCheck=true;
-        if(status) status.textContent='ready';
-        tryDismiss();
-      }
-    };
-  };
-
-  window.__smLoadPending=function(){ return total>0 && done<total; };
-
-  window.__smLoadDismiss=function(){
+  function _dismiss(){
     if(dismissed) return; dismissed=true;
+    clearTimeout(_hardTimeout);
     if(fill) fill.style.width='100%';
     if(status) status.textContent='ready';
     setTimeout(()=>{
       overlay.style.opacity='0';
       setTimeout(()=>{ overlay.style.display='none'; }, 850);
-    }, 200);
+    }, 150);
+  }
+
+  window.__smLoadTrack=function(label){
+    total++;
+    const pct=Math.max(8, Math.min(85, Math.round((done/Math.max(total,1))*100)));
+    if(fill) fill.style.width=pct+'%';
+    if(status) status.textContent='loading '+(label||'assets')+'...';
+    return function onDone(){
+      done++;
+      if(fill) fill.style.width=Math.min(98, Math.round((done/Math.max(total,1))*100))+'%';
+      if(done>=total && status) status.textContent='ready';
+      _tryDismiss();
+    };
   };
 
-  // Called by splash-fade: only dismiss if all loads are done
-  window.__smLoadDismissIfReady=function(){
-    settingsReceived=true; readyToCheck=true;
-    tryDismiss();
-  };
+  // Gate 1: signal that character GLB load has been queued
+  window.__smGate1=function(){ gate1=true; _tryDismiss(); };
+  // Gate 2: signal that settings.json models have all been queued
+  window.__smGate2=function(){ gate2=true; _tryDismiss(); };
+
+  window.__smLoadPending=function(){ return !gate1||!gate2||done<total; };
+  window.__smLoadDismiss=function(){ _dismiss(); };
+  window.__smLoadDismissIfReady=function(){ _tryDismiss(); };
 })();
 
 
@@ -12351,6 +12347,7 @@ function applySettings(s){
       });
     }
     if(s.models){ Object.keys(s.models).forEach(k=>{ if(k==='vhs_tape' || k==='cd_disc') return; const m=s.models[k]; if(!m) return; const src=resolveModelSrc(k,m,'models'); if(src){ loadSummary.models++; loadGroupGLB(src,k,m&&m.fileName||k,false,null); } }); }
+    if(typeof window.__smGate2==='function') window.__smGate2(); // all settings.json models queued
     if(s.itemModels){ Object.keys(s.itemModels).forEach(k=>{ const m=s.itemModels[k]; if(!m) return; const src=resolveModelSrc(k,m,'itemModels'); if(src){ loadSummary.itemModels++; itemModelRegistry[k]={...m}; ensureGLTFLoader(()=>{ const loader=new THREE.GLTFLoader(); if(THREE.__smDracoLoader&&loader.setDRACOLoader) loader.setDRACOLoader(THREE.__smDracoLoader); loader.load(src,(gltf)=>{ const obj=gltf.scene; const box=new THREE.Box3().setFromObject(obj); const size=box.getSize(new THREE.Vector3()); const maxDim=Math.max(size.x,size.y,size.z,0.0001); obj.scale.setScalar(Math.min(FOOD_GLB_NORMALIZE, FOOD_GLB_NORMALIZE/maxDim)); const box2=new THREE.Box3().setFromObject(obj); const center=box2.getCenter(new THREE.Vector3()); const min=box2.min.clone(); obj.position.sub(center); obj.position.y-=min.y; consumableModels[k]=obj; if(!itemModelRegistry[k].rotation) itemModelRegistry[k].rotation={x:0,y:0,z:0}; applyItemModelRotation(k); },undefined,()=>{}); }); } }); }
     if(s.heldPoses){ Object.keys(s.heldPoses).forEach(id=>{ if(!heldPoseConfig[id]) heldPoseConfig[id]={}; Object.keys(s.heldPoses[id]||{}).forEach(mode=>{ heldPoseConfig[id][mode]=JSON.parse(JSON.stringify(s.heldPoses[id][mode])); }); }); }
     if(s.restPoses){ Object.keys(s.restPoses).forEach(id=>{ if(MEDIA_SETTINGS_ITEM_KEYS.has(id)) return; restPoseConfig[id]=JSON.parse(JSON.stringify(s.restPoses[id])); }); }
