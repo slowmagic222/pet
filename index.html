@@ -1031,7 +1031,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
     <!-- BETA GATE — email form (hidden for returning players via JS) -->
     <div id="beta-gate" style="position:relative;z-index:2;width:100%;max-width:380px;padding:0 20px;margin-bottom:16px;text-align:center;color:#ffffff;">
       <div style="font-size:clamp(14px,3.5vw,20px);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:16px;text-shadow:2px 2px 0 rgba(0,0,0,0.9),0 0 10px rgba(0,0,0,0.7);">want to join the beta?</div>
-      <!-- Official Kit form (ck.5.js wires this up + posts to Kit, handling opt-in) -->
+      <!-- Kit-compatible form; JS below posts the same FormData shape Kit's embed uses. -->
       <form id="beta-form" action="https://app.kit.com/forms/9642856/subscriptions" class="seva-form formkit-form" method="post" data-sv-form="9642856" data-uid="d005531122" data-format="inline" data-version="5">
         <div data-style="clean">
           <ul class="formkit-alert formkit-alert-error" data-element="errors" data-group="alert"></ul>
@@ -17057,14 +17057,19 @@ window.closeFirstPlayPopup=closeFirstPlayPopup;
 //  • Returning players (already submitted) skip the form — the overlay just
 //    shows the image + loading bar, then reveals the title when loads finish.
 //  • New players see the email form; the overlay won't dismiss to the title
-//    until they submit (email posts to Kit via a hidden iframe — no CORS).
+//    until Kit accepts their submission.
 const BETA_SIGNUP_ENABLED = true; // set to false to skip the gate entirely
 
 (function setupBetaGate(){
   const gate=document.getElementById('beta-gate');
   const form=document.getElementById('beta-form');
   const msg=document.getElementById('beta-msg');
-  const alreadyJoined = !!localStorage.getItem('beta_email_submitted');
+  const KIT_UID='d005531122';
+  const KIT_USER_KEY='ckid';
+  const alreadyJoined = !!(
+    localStorage.getItem('beta_email_submitted') &&
+    localStorage.getItem('cksubscribed-'+KIT_UID)
+  );
 
   if(!BETA_SIGNUP_ENABLED || alreadyJoined){
     // No gate needed → hide the form and let the loader dismiss normally.
@@ -17075,16 +17080,44 @@ const BETA_SIGNUP_ENABLED = true; // set to false to skip the gate entirely
 
   if(!form){ if(typeof window.__smPassBetaGate==='function') window.__smPassBetaGate(); return; }
 
-  // Kit form subscription endpoint (numeric form id 9642856 → embed uid d005531122).
+  // Kit form subscription endpoint (numeric form id 9642856 -> embed uid d005531122).
   const KIT_ENDPOINT='https://app.kit.com/forms/9642856/subscriptions';
 
-  let _betaEntered=false;
+  let _betaEntered=false, _betaSubmitting=false;
   function advanceIntoGame(){
     if(gate){ gate.style.transition='opacity 0.5s'; gate.style.opacity='0'; setTimeout(()=>{ gate.style.display='none'; }, 500); }
     if(typeof window.__smPassBetaGate==='function') setTimeout(window.__smPassBetaGate, 400);
   }
-  function enterBeta(){
-    if(_betaEntered) return;
+  function getKitUserId(){
+    try{
+      let id=localStorage.getItem(KIT_USER_KEY);
+      if(!id){
+        id='xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,(c)=>{
+          const r=Math.random()*16|0, v=c==='x'?r:(r&0x3|0x8);
+          return v.toString(16);
+        });
+        localStorage.setItem(KIT_USER_KEY,id);
+      }
+      return id;
+    }catch(_e){
+      return String(Date.now())+'-'+Math.random().toString(16).slice(2);
+    }
+  }
+  function setBetaSubmitting(isSubmitting){
+    _betaSubmitting=isSubmitting;
+    const submitBtn=document.getElementById('beta-submit');
+    const emailEl=document.getElementById('beta-email');
+    if(submitBtn) submitBtn.disabled=isSubmitting;
+    if(emailEl) emailEl.disabled=isSubmitting;
+  }
+  function kitErrorMessage(data, fallback){
+    const messages=data&&data.errors&&data.errors.messages;
+    if(Array.isArray(messages) && messages.length) return messages.join(' ');
+    if(typeof messages==='string') return messages;
+    return fallback || 'email did not go through. try again.';
+  }
+  async function enterBeta(){
+    if(_betaEntered || _betaSubmitting) return;
     const emailEl=document.getElementById('beta-email');
     const email=emailEl ? emailEl.value.trim() : '';
     if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
@@ -17092,28 +17125,43 @@ const BETA_SIGNUP_ENABLED = true; // set to false to skip the gate entirely
       if(emailEl) emailEl.focus();
       return;
     }
-    _betaEntered=true;
-    localStorage.setItem('beta_email', email);
-    localStorage.setItem('beta_email_submitted','1');
+    setBetaSubmitting(true);
     if(msg){ msg.style.color='#ffffff'; msg.textContent='submitting…'; }
-    // POST to Kit exactly like the FormKit embed does: JSON body, CORS-enabled
-    // endpoint. Kit responds with {status:"success"|"quarantined", ...}.
-    fetch(KIT_ENDPOINT,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({email_address:email})
-    })
-    .then(r=>r.json().catch(()=>({})))
-    .then(data=>{
+
+    const formData=new FormData(form);
+    formData.set('email_address',email);
+    formData.append('referrer',document.referrer || '');
+    formData.append('host',document.location.href);
+    formData.append('search',document.location.search || '');
+    formData.append('user',getKitUserId());
+    formData.append('ckjs_version','6');
+
+    try{
+      const res=await fetch(KIT_ENDPOINT,{
+        method:'POST',
+        headers:{'Accept':'application/json','X-CKJS-Version':'6'},
+        body:formData
+      });
+      const data=await res.json().catch(()=>({}));
       console.log('[beta] kit response', data);
-      if(msg) msg.textContent='✓ check your email to confirm — loading…';
+      if(!res.ok) throw new Error(res.statusText || 'Kit request failed');
+      if(data.status!=='success' && data.status!=='quarantined'){
+        throw new Error(kitErrorMessage(data));
+      }
+
+      _betaEntered=true;
+      localStorage.setItem('beta_email', email);
+      localStorage.setItem('beta_email_submitted','1');
+      localStorage.setItem('cksubscribed-'+KIT_UID, String(Date.now()));
+      if(msg) msg.textContent='✓ you’re in — check your email soon';
       advanceIntoGame();
-    })
-    .catch(err=>{
+    }catch(err){
       console.warn('[beta] kit submit error', err);
-      if(msg) msg.textContent='✓ you’re in — loading…'; // never trap the player
-      advanceIntoGame();
-    });
+      localStorage.removeItem('beta_email_submitted');
+      if(msg){ msg.style.color='#ffd2c2'; msg.textContent=err && err.message ? err.message : 'email did not go through. try again.'; }
+      setBetaSubmitting(false);
+      if(emailEl) emailEl.focus();
+    }
   }
 
   // Handle submission ourselves (prevents native navigation to the Kit URL).
