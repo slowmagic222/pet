@@ -398,7 +398,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   gap:clamp(12px,3vh,24px);
-  background: rgba(4,3,10,0.35);
+  background: transparent;
   transition: opacity 0.8s;
 }
 #title-logo-wrap {
@@ -410,7 +410,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
   max-height: 28vh;
   object-fit: contain;
   image-rendering: pixelated;
-  filter: drop-shadow(0 0 24px rgba(232,74,138,0.4));
+  /* Pink glow for flavour + a hard dark drop shadow so it reads over the busy 3-D scene */
+  filter: drop-shadow(0 0 24px rgba(232,74,138,0.4)) drop-shadow(2px 3px 0 rgba(0,0,0,0.85)) drop-shadow(0 2px 8px rgba(0,0,0,0.6));
 }
 #title-buttons {
   display:flex; flex-direction:column; align-items:center; gap:10px;
@@ -442,15 +443,17 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
   letter-spacing:0.4em; text-transform:uppercase;
   background:transparent;
   border:none;
-  color:#c0a8d8;
+  color:#ffffff;
+  text-shadow:2px 2px 0 rgba(0,0,0,0.85), 0 2px 6px rgba(0,0,0,0.7);
   padding:8px 16px; cursor:pointer;
-  transition:color 0.15s;
+  transition:color 0.15s, text-shadow 0.15s;
   -webkit-tap-highlight-color:transparent;
   outline:none;
   display:block;
 }
 .title-btn:hover, .title-btn:focus {
-  color:#e84a8a;
+  color:#ffb0d0;
+  text-shadow:2px 2px 0 rgba(0,0,0,0.9), 0 0 12px rgba(232,74,138,0.7);
 }
 /* TUTORIAL */
 #tutorial-screen {
@@ -466,11 +469,12 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
   align-items:center; gap:16px;
 }
 #tutorial-img {
-  max-width:min(480px,88vw);
-  max-height:52vh;
+  max-width:min(340px,70vw);
+  max-height:40vh;
   object-fit:contain;
   image-rendering:pixelated;
   border:none;
+  margin:0 auto;
 }
 #tutorial-caption {
   font-family:'Pixellari',monospace;
@@ -909,8 +913,8 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 .dbg-drop-zone.drag-over { border-color:#e84a8a; background:rgba(232,74,138,0.05); }
 
 #tv-media-url{width:100%;background:#1a1228;border:1px solid #2a1e3a;color:#e8d5b0;padding:5px 6px;font-size:9px;font-family:'Pixellari',monospace;border-radius:2px;}
-#gameboy-overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(80vw,min(55vh,320px));aspect-ratio:10/9;background:transparent;box-shadow:none;border:none;border-radius:0;display:none;z-index:420;pointer-events:auto;overflow:visible;padding:0;}
-#gameboy-overlay canvas{width:100%;height:100%;display:block;background:transparent;image-rendering:pixelated;border:none;box-shadow:none;opacity:1;filter:none;}
+#gameboy-overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,min(80vh,360px));aspect-ratio:288/330;background:transparent;box-shadow:none;border:none;border-radius:0;display:none;z-index:420;pointer-events:auto;overflow:visible;padding:0;}
+#gameboy-overlay canvas{width:100%!important;height:100%!important;display:block;background:transparent;image-rendering:pixelated;border:none;box-shadow:none;opacity:1;filter:none;}
 #gameboy-hint{position:absolute;left:50%;bottom:-38px;transform:translateX(-50%);font-size:9px;color:#d7dec7;letter-spacing:.1em;text-transform:uppercase;opacity:.85;pointer-events:none;text-shadow:0 1px 4px rgba(0,0,0,.7);white-space:nowrap;}
 #gameboy-close{position:absolute;right:2px;top:2px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.05);color:#d7dec7;font:inherit;font-size:12px;line-height:1;padding:3px 8px;border-radius:999px;cursor:pointer;pointer-events:auto;}
 
@@ -935,7 +939,7 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 #cd-player-overlay{position:absolute;inset:0;z-index:410;display:none;align-items:center;justify-content:center;padding-bottom:0;pointer-events:none;}
 #cd-player-overlay.active{display:flex;pointer-events:all;}
 #cd-player-backdrop{position:absolute;inset:0;pointer-events:all;cursor:pointer;}
-#cd-player-panel{position:relative;z-index:1;pointer-events:all;width:298px;image-rendering:pixelated;opacity:0.75;transition:opacity 0.2s;
+#cd-player-panel{position:relative;z-index:1;pointer-events:all;width:298px;image-rendering:pixelated;opacity:0.75;transition:opacity 0.2s;transform:scale(1.25);transform-origin:center center;
   background:#dedad4;border:2px solid #a8a09a;
   box-shadow:3px 3px 0 #888,6px 6px 0 #555,inset 0 1px 0 rgba(255,255,255,0.75),inset -1px -1px 0 rgba(0,0,0,0.1);
   font-family:'Pixellari',monospace;}
@@ -1028,7 +1032,10 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
       <div id="title-logo-wrap">
         <img id="title-logo-img" src="assets/ui/logo2.png" alt="EMOTION ENGINE"
           onerror="this.style.display='none';document.getElementById('title-logo-text').style.display='block'">
-        <div id="title-logo-text" style="display:none;font-family:'Pixellari',monospace;font-size:clamp(18px,4vw,36px);letter-spacing:0.3em;color:#e8d5b0;text-transform:uppercase">EMOTION ENGINE</div>
+        <div id="title-logo-text" style="display:none;font-family:'Pixellari',monospace;color:#ffffff;text-shadow:3px 3px 0 rgba(0,0,0,0.85),0 2px 10px rgba(0,0,0,0.6);text-align:center;">
+          <div style="font-size:clamp(28px,6vw,52px);letter-spacing:0.35em;text-transform:uppercase;margin-bottom:8px;">MEMORY ROOM</div>
+          <div style="font-size:clamp(10px,2vw,14px);letter-spacing:0.15em;opacity:0.9;text-transform:none;">An Imaginary Friend Simulator by Slow Magic</div>
+        </div>
       </div>
       <div id="title-buttons">
         <button class="title-btn" id="btn-new" onclick="titleNewGame()">NEW</button>
@@ -1171,14 +1178,14 @@ html,body { width:100%; height:100%; overflow:hidden; background:#0a0a12; font-f
 
 
 
-<div id="gameboy-overlay"><button id="gameboy-close" type="button">x</button><canvas id="gameboy-canvas" width="240" height="216"></canvas><div id="gameboy-hint"></div>
+<div id="gameboy-overlay"><button id="gameboy-close" type="button">x</button><canvas id="gameboy-canvas" width="288" height="330"></canvas><div id="gameboy-hint"></div>
 <div id="gameboy-mobile-btns" style="gap:14px;margin-top:12px;flex-wrap:wrap;justify-content:center;width:100%;max-width:320px;align-self:center;">
   <button class="gb-btn" ontouchstart="gbMobileBtn('left');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">◄</button>
   <button class="gb-btn" ontouchstart="gbMobileBtn('spin');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">↻</button>
   <button class="gb-btn" ontouchstart="gbMobileBtn('drop');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">▼</button>
   <button class="gb-btn" ontouchstart="gbMobileBtn('right');event.preventDefault()" style="width:60px;height:60px;font-size:22px;">►</button>
 </div>
-<div id="gameboy-key-hint" style="color:#8bac0f;font-family:'Pixellari',monospace;font-size:9px;letter-spacing:0.15em;text-align:center;margin-top:8px;opacity:0.7;text-transform:uppercase;pointer-events:none;">← → move &nbsp;|&nbsp; ↑/Z spin &nbsp;|&nbsp; ↓ drop</div>
+<div id="gameboy-key-hint" style="color:#8bac0f;font-family:'Pixellari',monospace;font-size:9px;letter-spacing:0.15em;text-align:center;margin-top:8px;opacity:0.7;text-transform:uppercase;pointer-events:none;">← → move &nbsp;|&nbsp; Z/X spin &nbsp;|&nbsp; ↑ drop</div>
 </div>
 <video id="tv-video" crossorigin="anonymous" playsinline muted loop style="display:none"></video>
 <audio id="tv-audio" crossorigin="anonymous" loop style="display:none"></audio>
@@ -2068,7 +2075,7 @@ function refreshDoFState(forceFocus=false){
 }
 function refreshGlobalUIPixelCanvases(gup){
   const defs = [
-    ['gameboy-canvas',240,216],
+    ['gameboy-canvas',288,330],
     ['drum-canvas',240,280]
   ];
   defs.forEach(([id,w,h])=>{
@@ -2970,9 +2977,9 @@ const skyMesh={position:{x:0,y:0,z:0}}; // dummy alias so legacy refs don't brea
 
 // POSTER
 const posterGrp=new THREE.Group(); posterGrp.position.set(-1.2,0,-3.93); room.add(addGrp('poster_group',posterGrp));
-const posterMat=new THREE.MeshLambertMaterial({color:0x2a1840, side:THREE.DoubleSide, transparent:true, opacity:0.9});
+const posterMat=new THREE.MeshLambertMaterial({color:0x2a1840, side:THREE.DoubleSide, transparent:true, opacity:0.9, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1});
 const poster=new THREE.Mesh(new THREE.BoxGeometry(0.8,1.0,0.02),posterMat); poster.position.y=2.0; posterGrp.add(poster);
-const posterInnerMat=new THREE.MeshLambertMaterial({color:0x180f2a, side:THREE.DoubleSide, transparent:true, opacity:0.85});
+const posterInnerMat=new THREE.MeshLambertMaterial({color:0x180f2a, side:THREE.DoubleSide, transparent:true, opacity:0.85, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2});
 const posterInner=new THREE.Mesh(new THREE.BoxGeometry(0.7,0.88,0.03),posterInnerMat); posterInner.position.set(0,2.0,0.01); posterGrp.add(posterInner);
 
 // LAMP
@@ -4862,7 +4869,7 @@ window.dbgGiveSimpleVHS=function(){
   pulseGlow(tvGrp,0x4488ff,2500);
 };
 
-let gameboyGame={active:false,board:[],cols:10,rows:12,piece:null,next:null,timer:0,speed:0.55,score:0,lines:0};
+let gameboyGame={active:false,board:[],cols:10,rows:16,piece:null,next:null,timer:0,speed:0.55,score:0,lines:0};
 
 const GB_PALETTE={bg:'#9bbc0f', mid:'#6f8c08', dark:'#306230', ink:'#0f380f', shell:'#c6ccb4', shadow:'rgba(15,56,15,0.42)', gridA:'rgba(15,56,15,0.09)', gridB:'rgba(48,98,48,0.06)'};
 function gameboyBeep(kind='move'){
@@ -4891,7 +4898,7 @@ function gameboyBeep(kind='move'){
   osc.connect(gain); gain.connect(ctx.destination); osc.start(now); osc.stop(now+dur+0.02);
 }
 
-const TETRO_PASTEL=['#ff6b9d','#5bc8ff','#ffd166','#06d6a0','#c77dff','#4ecdc4','#ff9a3c'];
+const TETRO_PASTEL=['#ff6b9d','#5bc8ff','#ffd166','#06d6a0','#c77dff','#4ecdc4','#ff9a3c','#ffa8d8'];
 const TETROMINOES=[
   {name:'I',color:TETRO_PASTEL[0],shape:[[1,1,1,1]]},
   {name:'O',color:TETRO_PASTEL[1],shape:[[1,1],[1,1]]},
@@ -4899,7 +4906,8 @@ const TETROMINOES=[
   {name:'L',color:TETRO_PASTEL[3],shape:[[0,0,1],[1,1,1]]},
   {name:'J',color:TETRO_PASTEL[4],shape:[[1,0,0],[1,1,1]]},
   {name:'S',color:TETRO_PASTEL[5],shape:[[0,1,1],[1,1,0]]},
-  {name:'Z',color:TETRO_PASTEL[6],shape:[[1,1,0],[0,1,1]]}
+  {name:'Z',color:TETRO_PASTEL[6],shape:[[1,1,0],[0,1,1]]},
+  {name:'D',color:TETRO_PASTEL[7],shape:[[1,1]]}  // 2-wide domino
 ];
 function cloneShape(shape){ return shape.map(r=>r.slice()); }
 function randomPiece(){ const t=TETROMINOES[Math.floor(Math.random()*TETROMINOES.length)]; return {x:0,y:0,shape:cloneShape(t.shape),color:t.color,name:t.name}; }
@@ -4937,7 +4945,13 @@ document.getElementById('gameboy-canvas')?.addEventListener('pointerdown',()=>{
     gameboyGame.firstInputReceived=true;
   }
 });
-window.addEventListener('keydown',(e)=>{ if(!gameboyGame.active||!gameboyGame.piece) return; if(e.key==='ArrowLeft'){ gameboyGame.firstInputReceived=true; if(gameCanPlace(gameboyGame.piece.x-1,gameboyGame.piece.y)){ gameboyGame.piece.x--; gameboyBeep('move'); } } else if(e.key==='ArrowRight'){ gameboyGame.firstInputReceived=true; if(gameCanPlace(gameboyGame.piece.x+1,gameboyGame.piece.y)){ gameboyGame.piece.x++; gameboyBeep('move'); } } else if(e.key==='ArrowDown'){ gameboyGame.firstInputReceived=true; if(gameCanPlace(gameboyGame.piece.x,gameboyGame.piece.y+1)){ gameboyGame.piece.y++; gameboyBeep('drop'); } else gameLockPiece(); } else if(e.key==='x' || e.key==='X' || e.key==='ArrowUp'){ gameboyGame.firstInputReceived=true; const rot=rotateShape(gameboyGame.piece.shape); if(gameCanPlace(gameboyGame.piece.x,gameboyGame.piece.y,rot)){ gameboyGame.piece.shape=rot; gameboyBeep('rotate'); } } else if(e.key==='Escape'){ showGameboyGame(false); } });
+// Shared tetris input helpers (reused by keyboard, mobile buttons, and controller)
+function gbMove(d){ const g=gameboyGame; if(!g.active||!g.piece) return; g.firstInputReceived=true; if(gameCanPlace(g.piece.x+d,g.piece.y)){ g.piece.x+=d; gameboyBeep('move'); } }
+function gbRotate(){ const g=gameboyGame; if(!g.active||!g.piece) return; g.firstInputReceived=true; const rot=rotateShape(g.piece.shape); if(gameCanPlace(g.piece.x,g.piece.y,rot)){ g.piece.shape=rot; gameboyBeep('rotate'); } }
+function gbSoftDrop(){ const g=gameboyGame; if(!g.active||!g.piece) return; g.firstInputReceived=true; if(gameCanPlace(g.piece.x,g.piece.y+1)){ g.piece.y++; gameboyBeep('drop'); } else gameLockPiece(); }
+function gbHardDrop(){ const g=gameboyGame; if(!g.active||!g.piece) return; g.firstInputReceived=true; while(gameCanPlace(g.piece.x,g.piece.y+1)) g.piece.y++; gameLockPiece(); }
+window.gbMove=gbMove; window.gbRotate=gbRotate; window.gbSoftDrop=gbSoftDrop; window.gbHardDrop=gbHardDrop;
+window.addEventListener('keydown',(e)=>{ if(!gameboyGame.active||!gameboyGame.piece) return; if(e.key==='ArrowLeft'){ gbMove(-1); } else if(e.key==='ArrowRight'){ gbMove(1); } else if(e.key==='ArrowDown'){ gbSoftDrop(); } else if(e.key==='ArrowUp'||e.key===' '){ gbHardDrop(); } else if(e.key==='x' || e.key==='X' || e.key==='z' || e.key==='Z'){ gbRotate(); } else if(e.key==='Escape'){ showGameboyGame(false); } });
 document.getElementById('gameboy-close')?.addEventListener('click',(e)=>{ e.stopPropagation(); showGameboyGame(false); });
 document.getElementById('gameboy-overlay')?.addEventListener('click',(e)=>{
   const overlay=document.getElementById('gameboy-overlay');
@@ -4981,6 +4995,7 @@ function drawGameboyWaitScreen(){
 
 function updateGameboy(dt){
   if(!gameboyGame.active||!gameboyGame.piece) return;
+  if(window._presentPeek) return; // frozen while an incoming present is briefly revealed
   if(gameboyGame.firstInputReceived){
     gameboyGame.timer+=dt;
     if(gameboyGame.timer>gameboyGame.speed){
@@ -4995,11 +5010,17 @@ function updateGameboy(dt){
   ctx.imageSmoothingEnabled=false;
   ctx.clearRect(0,0,c.width,c.height);
 
-  const cell=Math.floor(Math.min(c.width/(gameboyGame.cols+7), c.height/(gameboyGame.rows+3)));
-  const ox=Math.floor((c.width-gameboyGame.cols*cell)/2)-18;
-  const oy=Math.floor((c.height-gameboyGame.rows*cell)/2)+6;
-  const screenW = gameboyGame.cols*cell+16;
-  const screenH = gameboyGame.rows*cell+16;
+  const cols=gameboyGame.cols, rows=gameboyGame.rows;
+  const PANEL_W=Math.round(c.width*0.24);      // reserved right column (score/next)
+  const GAP=Math.max(6,Math.round(c.width*0.03));
+  const cell=Math.floor(Math.min((c.width-PANEL_W-GAP-14)/cols, (c.height-16)/rows));
+  const contentW=cols*cell+GAP+PANEL_W;
+  // Center the whole composition (playfield + gap + panel), not just the playfield.
+  const ox=Math.floor((c.width-contentW)/2);
+  const oy=Math.floor((c.height-rows*cell)/2);
+  const panelX=ox+cols*cell+GAP;
+  const screenW = cols*cell+16;
+  const screenH = rows*cell+16;
 
   function drawDMGCell(px, py, col, alpha=1){
     ctx.save();
@@ -5039,12 +5060,20 @@ function updateGameboy(dt){
 
   const p=gameboyGame.piece, s=p.shape;
 
-  // ghost piece
+  // ghost piece — outlined in the piece's own colour so the landing spot is clear
   let ghostY = p.y;
   while(gameCanPlace(p.x, ghostY+1, s)) ghostY++;
-  for(let y=0;y<s.length;y++) for(let x=0;x<s[y].length;x++) if(s[y][x]){
-    const px=ox+(p.x+x)*cell, py=oy+(ghostY+y)*cell;
-    if(py>=oy-cell) drawDMGCell(px, py, GB_PALETTE.mid, 0.28);
+  if(ghostY>p.y){
+    for(let y=0;y<s.length;y++) for(let x=0;x<s[y].length;x++) if(s[y][x]){
+      const px=ox+(p.x+x)*cell, py=oy+(ghostY+y)*cell;
+      if(py>=oy-cell){
+        ctx.save();
+        ctx.globalAlpha=0.16; ctx.fillStyle=p.color; ctx.fillRect(px+1,py+1,cell-2,cell-2);
+        ctx.globalAlpha=0.85; ctx.strokeStyle=p.color; ctx.lineWidth=1;
+        ctx.strokeRect(px+1.5,py+1.5,cell-3,cell-3);
+        ctx.restore();
+      }
+    }
   }
 
   // active piece
@@ -5054,24 +5083,24 @@ function updateGameboy(dt){
   }
   ctx.restore();
 
-  // "SLOW BOY" branding — top-left
+  // "SLOW BOY" branding — top of the side panel
   ctx.font='bold 9px "Pixellari",monospace'; ctx.fillStyle=GB_PALETTE.ink;
-  ctx.textAlign='left'; ctx.fillText('SLOW BOY', ox-8, oy-6);
+  ctx.textAlign='left'; ctx.fillText('SLOW BOY', panelX, oy-4);
 
   // score + lines + next — white so it reads clearly
   ctx.fillStyle='#ffffff';
   ctx.font='10px monospace';
-  ctx.fillText('score', ox+gameboyGame.cols*cell+10, oy+12);
-  ctx.fillText(String(gameboyGame.score).padStart(4,'0'), ox+gameboyGame.cols*cell+10, oy+24);
-  ctx.fillText('lines', ox+gameboyGame.cols*cell+10, oy+42);
-  ctx.fillText(String(gameboyGame.lines).padStart(2,'0'), ox+gameboyGame.cols*cell+10, oy+54);
-  ctx.fillText('next', ox+gameboyGame.cols*cell+10, oy+74);
+  ctx.fillText('score', panelX, oy+12);
+  ctx.fillText(String(gameboyGame.score).padStart(4,'0'), panelX, oy+24);
+  ctx.fillText('lines', panelX, oy+42);
+  ctx.fillText(String(gameboyGame.lines).padStart(2,'0'), panelX, oy+54);
+  ctx.fillText('next', panelX, oy+74);
 
   const n=gameboyGame.next;
   if(n){
     const nc=8;
     for(let y=0;y<n.shape.length;y++) for(let x=0;x<n.shape[y].length;x++) if(n.shape[y][x]){
-      const px=ox+gameboyGame.cols*cell+12+x*nc, py=oy+82+y*nc;
+      const px=panelX+2+x*nc, py=oy+82+y*nc;
       ctx.fillStyle='rgba(15,56,15,0.35)';
       ctx.fillRect(px+1, py+1, nc-2, nc-2);
       ctx.fillStyle=n.color;
@@ -5668,6 +5697,7 @@ floorPlane.rotation.x=-Math.PI/2; floorPlane.position.y=0.01; scene.add(floorPla
 // ---- CHARACTER ----
 const character=new THREE.Group(); scene.add(character);
 character.position.set(0,0,0);
+character.visible=false; // hidden until game starts
 
 const charBody=new THREE.Mesh(new THREE.BoxGeometry(0.42,0.65,0.28),mat(0x1a1428)); charBody.position.y=0.82; charBody.castShadow=true; character.add(charBody);
 const charHoodie=new THREE.Mesh(new THREE.BoxGeometry(0.44,0.45,0.3),mat(0x1e1830)); charHoodie.position.y=0.9; character.add(charHoodie);
@@ -6211,7 +6241,7 @@ function updateBehavior(dt){
     routineHoldTimer-=dt;
     if(routineHoldTimer<=0 && (charState==='watching'||charState==='sitting'||charState==='idle')) setCharState('idle');
   }
-  if(charState==='idle' && !pendingAction){
+  if(charState==='idle' && !pendingAction && !titleMode){
     routineTimer+=dt;
     if(routineTimer>nextRoutineAt){
       routineTimer=0;
@@ -7501,10 +7531,10 @@ window.toyPlaceOnShelf=toyPlaceOnShelf;
 // Mobile gameboy controls
 window.gbMobileBtn=function(dir){
   if(!gameboyGame.active||!gameboyGame.piece) return;
-  if(dir==='left'){ if(gameCanPlace(gameboyGame.piece.x-1,gameboyGame.piece.y)){ gameboyGame.piece.x--; gameboyBeep('move'); } }
-  else if(dir==='right'){ if(gameCanPlace(gameboyGame.piece.x+1,gameboyGame.piece.y)){ gameboyGame.piece.x++; gameboyBeep('move'); } }
-  else if(dir==='spin'){ const rot=rotateShape(gameboyGame.piece.shape); if(gameCanPlace(gameboyGame.piece.x,gameboyGame.piece.y,rot)){ gameboyGame.piece.shape=rot; gameboyBeep('rotate'); } }
-  else if(dir==='drop'){ while(gameCanPlace(gameboyGame.piece.x,gameboyGame.piece.y+1)){ gameboyGame.piece.y++; } gameboyGame.lockDelay=0; gameboyBeep('drop'); }
+  if(dir==='left') gbMove(-1);
+  else if(dir==='right') gbMove(1);
+  else if(dir==='spin') gbRotate();
+  else if(dir==='drop') gbHardDrop();
 };
 
 // Mobile drum controls
@@ -7646,8 +7676,8 @@ function applyPosterTexture(mesh, rewardId){
 }
 function buildPosterDisplay(rewardId){
   const grp=new THREE.Group();
-  const backing=new THREE.Mesh(new THREE.PlaneGeometry(0.9,1.2), new THREE.MeshLambertMaterial({color:0xe8d5b0}));
-  const art=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.95), new THREE.MeshLambertMaterial({color:0xffffff}));
+  const backing=new THREE.Mesh(new THREE.PlaneGeometry(0.9,1.2), new THREE.MeshLambertMaterial({color:0xe8d5b0, polygonOffset:true, polygonOffsetFactor:-1, polygonOffsetUnits:-1}));
+  const art=new THREE.Mesh(new THREE.PlaneGeometry(0.72,0.95), new THREE.MeshLambertMaterial({color:0xffffff, polygonOffset:true, polygonOffsetFactor:-2, polygonOffsetUnits:-2}));
   art.position.z=0.002;
   applyPosterTexture(art, rewardId);
   grp.add(backing); grp.add(art);
@@ -7762,12 +7792,71 @@ interactables.push({obj:packageGrp, name:'package', label:'open package', range:
 interactables.push({obj:floorDisk2, name:'floor_disk2', label:'pick up disk 2', range:2.0});
 interactables.push({obj:floorDisk3, name:'floor_disk3', label:'pick up disk 3', range:2.0});
 
+// Pleasant arrival chime for an incoming present (WebAudio — no asset needed)
+function playPresentChime(){
+  try{
+    const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return;
+    const ctx=(window._smGBAC ||= new AC());
+    if(ctx.state==='suspended') ctx.resume().catch(()=>{});
+    const now=ctx.currentTime;
+    const notes=[[880,0],[1108.73,0.10],[1318.51,0.20],[1760,0.32]]; // A5 · C#6 · E6 · A6
+    notes.forEach(([f,t])=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type='triangle'; o.frequency.setValueAtTime(f,now+t);
+      g.gain.setValueAtTime(0.0001,now+t);
+      g.gain.linearRampToValueAtTime(0.13,now+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,now+t+0.55);
+      o.connect(g); g.connect(ctx.destination); o.start(now+t); o.stop(now+t+0.62);
+    });
+  }catch(e){}
+}
+
+// If the player is inside a mini-game / CD screen, briefly reveal the incoming
+// present, then return them to whatever screen they were on.
+function presentPeekIfNeeded(){
+  const openers=[];
+  if(typeof gameboyGame!=='undefined' && gameboyGame.active) openers.push('gameboy-overlay');
+  if(typeof drumGame!=='undefined' && (drumGame.active||drumGame.waiting)) openers.push('drum-overlay');
+  if(typeof synthOpen!=='undefined' && synthOpen) openers.push('synth-overlay');
+  if(window.cdp && cdp.open) openers.push('cd-player-overlay');
+  if(!openers.length) return;
+  window._presentPeek=true;                       // freezes gameboy/synth updates while hidden
+  const saved=[];
+  openers.forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    saved.push({el, opacity:el.style.opacity, pe:el.style.pointerEvents, tr:el.style.transition});
+    el.style.transition='opacity 0.35s';
+    el.style.opacity='0';
+    el.style.pointerEvents='none';
+  });
+  let done=false;
+  const restore=()=>{
+    if(done) return; done=true;
+    window._presentPeek=false;
+    saved.forEach(s=>{
+      s.el.style.opacity = s.opacity || '';
+      s.el.style.pointerEvents = s.pe || '';
+      setTimeout(()=>{ s.el.style.transition = s.tr || ''; }, 420);
+    });
+  };
+  // Restore shortly after the present lands (poll), with a hard safety timeout.
+  const waitLanded=()=>{
+    if(done) return;
+    if(packagePhysics && packagePhysics.landed){ setTimeout(restore, 1500); }
+    else setTimeout(waitLanded, 200);
+  };
+  setTimeout(waitLanded, 500);
+  setTimeout(restore, 7000); // safety: never trap the player behind a hidden screen
+}
+
 function spawnRewardPackage(rewardId, rewardObj){
   const reward = rewardObj || pickNextReward() || rewardPools.plushies[0] || {id:'plush_bear',type:'plush',label:'bear plush',color:0xc47c3a};
   const rid = rewardId || reward.id;
   packageGrp.visible=true;
   setActionCamera(packageGrp, 4.8, 5.4, 3.0);
   try{ playSFX('packageSpawn'); }catch(e){}
+  playPresentChime();
+  presentPeekIfNeeded();
   // Spawn from back wall, fly toward center-front of room (away from bed)
   packageGrp.position.set(0.8+Math.random()*0.4, 3.2, -3.95);
   packageGrp.rotation.set(0,0,0);
@@ -8647,6 +8736,7 @@ function checkInspirationConditions(){
     state.didCD=false; state.didVHS=false; state.didGame=false;
     state.didClean=false; state.didSleep=false; state.didDrum=false; state.didSynth=false; state.didPet=false;
     state.trashCleaned=0;
+    petInspoPetCount=0; // new cycle → petting must build up again
     clearAllTimedInspo();
     scheduleProductionRetry(800);
   }
@@ -8783,6 +8873,7 @@ function finishProduction(){
   state.didCD=false; state.didVHS=false; state.didGame=false;
   state.didClean=false; state.didSleep=false; state.didDrum=false; state.didSynth=false; state.didPet=false;
   state.trashCleaned=0;
+  petInspoPetCount=0; // new cycle → petting must build up again
   clearAllTimedInspo();
   updateInspoBar();
   try{ _stopAmbience('producing'); }catch(e){}
@@ -9084,19 +9175,22 @@ window.startGame=function(){
   setTimeout(()=>{
     const trtr=document.getElementById('title-room-tone'); if(trtr){ try{ trtr.pause(); trtr.src=''; }catch(_e){} }
   }, 1800);
-  // Reset orbit offset and go directly to iso follow cam
+  // ── Single fluid intro: glide straight into the follow camera ──
+  // (Previously: sit at iso → pan to side → blend to follow = three motions.
+  //  Now just one gentle push-in that settles on the character.)
   camOrbitX=0; camOrbitY=0; camZoom=0;
-  camState='iso';
-  camera.position.copy(CAM_ISO.pos);
-  camera.lookAt(CAM_ISO.target);
-
-  // After a beat, smoothly animate to SIDE view
-  setTimeout(()=>{
-    camState='side';
-    camT=0;
-    camAnimating=true;
-    camPanSpeed=0.22; // slow, cinematic
-  }, 1800);
+  camState='side';                 // follow cam frames the SIDE base
+  camAnimating=false; camOverride=false; camT=0;
+  const _sBase=CAM_SIDE;
+  const _sDir=_sBase.pos.clone().sub(_sBase.target);              // target → camera
+  const _sStart=_sBase.target.clone().add(_sDir.clone().multiplyScalar(1.32)); // pulled back ~32%
+  _sStart.y += 0.7;                // start a touch higher for a gentle descent
+  camera.position.copy(_sStart);
+  camera.lookAt(_sBase.target);
+  // Hand straight to updateCameraFeel with a slow single-glide blend into the follow framing
+  camBlendFrom={pos:_sStart.clone(), look:_sBase.target.clone()};
+  camBlendT=0;
+  camBlendSpeed=0.34;              // slow + cinematic; one continuous motion
 
   // Walls fade in — animate opacity independently since we bypass animateCamera
   setTimeout(()=>{
@@ -9114,7 +9208,7 @@ window.startGame=function(){
       if(t<1) requestAnimationFrame(fadeWall);
     };
     requestAnimationFrame(fadeWall);
-  }, 3000);
+  }, 500);
 
   // Wake character, restore cam speed for follow
   setTimeout(()=>{
@@ -9201,33 +9295,6 @@ function drawSky(hr, t){
       skyCtx.fill();
     }
   }
-  // Moon
-  if(nightBlend>0.2){
-    const mx=w*0.78, my=h*0.18;
-    const moonGlow=skyCtx.createRadialGradient(mx,my,0,mx,my,30);
-    moonGlow.addColorStop(0,`rgba(200,210,255,${nightBlend*0.35})`);
-    moonGlow.addColorStop(1,'rgba(0,0,0,0)');
-    skyCtx.fillStyle=moonGlow; skyCtx.fillRect(0,0,w,h);
-    skyCtx.beginPath(); skyCtx.arc(mx,my,10,0,Math.PI*2);
-    skyCtx.fillStyle=`rgba(230,235,255,${nightBlend})`; skyCtx.fill();
-    // Moon crescent shadow
-    skyCtx.beginPath(); skyCtx.arc(mx+4,my-2,9,0,Math.PI*2);
-    skyCtx.fillStyle=`rgba(${topR-5},${topG-5},${topB+5},${nightBlend*0.9})`; skyCtx.fill();
-  }
-  // Sun
-  if(sunBlend>0||dawnBlend>0||duskBlend>0){
-    const sunY=isDawn?h*0.7-dawnBlend*h*0.5:(isDusk?h*0.5+duskBlend*h*0.3:h*0.2);
-    const sunX=isDawn?w*0.3:(isDusk?w*0.75:w*0.6);
-    const sunVis=Math.max(sunBlend,dawnBlend*0.7,duskBlend*0.5);
-    const sunR=isDusk?255:(isDawn?255:255), sunG=isDusk?140:(isDawn?180:240), sunB=isDusk?60:(isDawn?80:180);
-    const glow=skyCtx.createRadialGradient(sunX,sunY,0,sunX,sunY,55);
-    glow.addColorStop(0,`rgba(${sunR},${sunG},${sunB},${sunVis*0.5})`);
-    glow.addColorStop(0.4,`rgba(${sunR},${sunG},${sunB},${sunVis*0.15})`);
-    glow.addColorStop(1,'rgba(0,0,0,0)');
-    skyCtx.fillStyle=glow; skyCtx.fillRect(0,0,w,h);
-    skyCtx.beginPath(); skyCtx.arc(sunX,sunY,8,0,Math.PI*2);
-    skyCtx.fillStyle=`rgba(255,255,${sunBlend>0.5?220:180},${sunVis})`; skyCtx.fill();
-  }
   // Dawn/dusk horizon glow
   if(dawnBlend>0||duskBlend>0){
     const blend=Math.max(dawnBlend,duskBlend);
@@ -9250,6 +9317,7 @@ let camDragActive=false;
 let camDragLastX=0, camDragLastY=0;
 let camDragMoved=false; // track if we actually dragged (suppress click)
 let camOrbitX=0, camOrbitY=0;
+let titleMode=true; // true while title screen is showing; suppresses normal camera feel
 let camZoom=0;
 const CAM_DRAG_SPEED=0.0035; // slower = more weight/resistance
 let CAM_ORBIT_LIMIT_X=999; // unlimited horizontal
@@ -9535,7 +9603,7 @@ canvasEl.addEventListener('touchmove',(e)=>{
 canvasEl.addEventListener('touchend',()=>{ if(pinchActive){ pinchActive=false; } if(touchDragActive){ touchDragActive=false; } },{passive:false});
 
 function updateCameraFeel(dt){
-  if(camAnimating||camOverride)return;
+  if(titleMode||camAnimating||camOverride)return;
   const desiredFollow=character.position.clone(); desiredFollow.y=0.9;
   smoothFollowTarget.lerp(desiredFollow, Math.min(1, dt*3.0));
   if(actionCam.active){
@@ -10076,13 +10144,149 @@ function titleLoadGame(){
     // Don't show title screen yet — loading overlay covers it until ready
     // Signal that splash is done — loading overlay will dismiss when all loads complete
     if(typeof window.__smLoadDismissIfReady==='function') window.__smLoadDismissIfReady();
-    // Start room orbit
+    // ── TITLE 3D SCENE: Emotion Engine room with Slow Magic sitting ──
+    const _titleGrp=new THREE.Group(); scene.add(_titleGrp);
+    room.visible=false; // hide game room while on title
+    // Strip post-processing effects that dim/darken the title scene
+    const _postVigSave=typeof post!=='undefined'?post.vignette:0;
+    const _postDesSave=typeof post!=='undefined'?post.desaturate:0;
+    if(typeof post!=='undefined'){ post.vignette=0; post.desaturate=0; }
+
+    ensureGLTFLoader(()=>{
+      const _rl=new THREE.GLTFLoader();
+      if(THREE.__smDracoLoader&&_rl.setDRACOLoader) _rl.setDRACOLoader(THREE.__smDracoLoader);
+      _rl.load('assets/models/emotion_engine_room.glb',(gltf)=>{
+        _titleGrp.add(gltf.scene);
+        // Grab the spinning disc for the title animation
+        gltf.scene.traverse(o=>{ if(o.name==='Disc Cover'||o.name==='Vinyl'||o.name==='Circle.003') _titleDisk=o; });
+        // Load Slow Magic in sitting pose
+        const _sl=new THREE.GLTFLoader();
+        if(THREE.__smDracoLoader&&_sl.setDRACOLoader) _sl.setDRACOLoader(THREE.__smDracoLoader);
+        _sl.load('assets/models/slow_magic_character.glb',(smg)=>{
+          const sm=smg.scene;
+          // GLB node 35 (Armature.004) has T/R/S baked in from Blender world space —
+          // position/rotation/scale are already correct; no override needed.
+          _titleGrp.add(sm);
+          // Collect bones and snapshot their rest quaternions for idle animation
+          sm.traverse(obj=>{
+            if(obj.isBone){ obj.userData._rq=obj.quaternion.clone(); _smBones[obj.name]=obj; }
+          });
+        });
+      });
+    });
+
+    // Float/pivot camera + sitting SM idle animation
     let titleOrbiting=true;
-    let titleOrbT=0;
+    let _titleCamT=0, _titleCamLast=performance.now();
+    let _titleDisk=null; // set when room GLB loads
+    // Sitting SM bones + pre-allocated helpers
+    const _smBones={};
+    const _smIdleQ=new THREE.Quaternion();
+    const _smIdleE=new THREE.Euler();
+    // SM look-toward-camera state
+    let _smLookYaw=0, _smLookPitch=0;
+    let _smLookTargYaw=0, _smLookTargPitch=0;
+    let _smLookStateT=0, _smLookStateDur=3+Math.random()*3;
+    let _smLookMode='camera'; // 'camera' | 'wander'
+    // User camera interaction (drag to orbit, scroll to zoom)
+    let _titleAngleDelta=0, _titleRadiusDelta=0;
+    let _titleDragActive=false, _titleDragX=0;
+    let _titleLastInteractT=-99;
+    const TITLE_IDLE_RETURN=5.0;
+    function _titleMD(e){ _titleDragActive=true; _titleDragX=e.clientX; _titleLastInteractT=_titleCamT; }
+    function _titleMM(e){ if(!_titleDragActive) return; const dx=e.clientX-_titleDragX; _titleDragX=e.clientX; _titleAngleDelta-=dx*0.005; _titleLastInteractT=_titleCamT; }
+    function _titleMU(){ _titleDragActive=false; }
+    function _titleWH(e){ e.preventDefault(); _titleRadiusDelta=Math.max(-4,Math.min(7,_titleRadiusDelta+e.deltaY*0.006)); _titleLastInteractT=_titleCamT; }
+    const _titleCanvas=document.querySelector('canvas');
+    if(_titleCanvas){ _titleCanvas.addEventListener('mousedown',_titleMD); _titleCanvas.addEventListener('wheel',_titleWH,{passive:false}); }
+    window.addEventListener('mousemove',_titleMM); window.addEventListener('mouseup',_titleMU);
     function titleOrbit(){
       if(!titleOrbiting) return;
-      titleOrbT+=0.003;
-      camOrbitX=-titleOrbT; // reversed
+      const _now=performance.now();
+      const dt=Math.min(0.05,(_now-_titleCamLast)/1000);
+      _titleCamT+=dt;
+      _titleCamLast=_now;
+      // Decay user angle/radius deltas back to auto after idle
+      const idle=_titleCamT-_titleLastInteractT;
+      if(!_titleDragActive && idle>TITLE_IDLE_RETURN){
+        const decay=1-Math.min(1,dt*0.6);
+        _titleAngleDelta*=decay;
+        _titleRadiusDelta*=decay;
+      }
+      // ── Camera: shifted left, zoomed out, three-layer variation ──
+      const px=0.3, py=0.45, pz=0.1;   // pivot shifted left & slightly forward
+      const baseRadius=9.3;            // pulled back so the console sits further from the screen
+      const autoAngle=Math.PI*0.30        // base: camera front-right, looking left
+        +Math.sin(_titleCamT*0.11)*0.40   // slow sweep — reduced so the item rotates less
+        +Math.sin(_titleCamT*0.29)*0.14   // medium wobble
+        +Math.sin(_titleCamT*0.07)*0.10;  // very slow drift
+      const angle=autoAngle+_titleAngleDelta;
+      const radius=baseRadius+_titleRadiusDelta;
+      const height=2.1
+        +Math.sin(_titleCamT*0.09)*0.45
+        +Math.sin(_titleCamT*0.22)*0.16;
+      camera.position.set(px+Math.sin(angle)*radius, height, pz+Math.cos(angle)*radius);
+      camera.lookAt(px,py,pz);
+      camera.fov=65; camera.updateProjectionMatrix();
+      // ── Disc rotation ──
+      if(_titleDisk) _titleDisk.rotation.y+=dt*1.4;
+      // ── Console diorama: gentle, varied floating (subtle yaw + slight up/down tilt + bob) ──
+      {
+        const ft=_titleCamT;
+        _titleGrp.rotation.y = Math.sin(ft*0.16)*0.12 + Math.sin(ft*0.33)*0.045; // soft, varied yaw — less than before
+        _titleGrp.rotation.x = Math.sin(ft*0.13)*0.05;                            // slight up/down float
+        _titleGrp.rotation.z = Math.sin(ft*0.10)*0.03;                            // subtle roll
+        _titleGrp.position.y = Math.sin(ft*0.5)*0.035;                            // floating bob
+      }
+      // ── SM: look-at-camera state machine ──
+      _smLookStateT+=dt;
+      if(_smLookStateT>_smLookStateDur){
+        _smLookStateT=0;
+        _smLookStateDur=2.5+Math.random()*4;
+        if(_smLookMode==='camera'&&Math.random()<0.32){
+          _smLookMode='wander';
+          _smLookTargYaw=(Math.random()-0.5)*1.1;
+          _smLookTargPitch=(Math.random()-0.5)*0.35;
+        } else {
+          _smLookMode='camera';
+        }
+      }
+      if(_smLookMode==='camera'){
+        // World direction from SM (approx head pos) to camera
+        const dX=camera.position.x-(-0.235);
+        const dZ=camera.position.z-0.588;
+        const dY=camera.position.y-0.55; // rough head height in scene
+        const horiz=Math.sqrt(dX*dX+dZ*dZ);
+        const worldYaw=Math.atan2(dX,dZ);
+        const smBodyYaw=1.474; // armature rest yaw baked into GLB
+        _smLookTargYaw=Math.max(-0.75,Math.min(0.75,worldYaw-smBodyYaw));
+        _smLookTargPitch=Math.max(-0.3,Math.min(0.3,-Math.atan2(dY,horiz)*0.4));
+      }
+      const lerpK=Math.min(1,dt*2.2);
+      _smLookYaw+=(_smLookTargYaw-_smLookYaw)*lerpK;
+      _smLookPitch+=(_smLookTargPitch-_smLookPitch)*lerpK;
+      // ── Sitting SM bone animation ──
+      const t=_titleCamT;
+      const _b=_smBones;
+      if(_b.Head){
+        _smIdleE.set(
+          _smLookPitch + Math.sin(t*0.37)*0.03 + Math.sin(t*0.91)*0.015,
+          _smLookYaw,
+          Math.sin(t*0.29)*0.045 + Math.sin(t*0.67)*0.02
+        );
+        _smIdleQ.setFromEuler(_smIdleE);
+        _b.Head.quaternion.copy(_b.Head.userData._rq).multiply(_smIdleQ);
+      }
+      if(_b['Shin R']){
+        _smIdleE.set(Math.sin(t*0.53+0.8)*0.055+Math.sin(t*0.19)*0.02,0,0);
+        _smIdleQ.setFromEuler(_smIdleE);
+        _b['Shin R'].quaternion.copy(_b['Shin R'].userData._rq).multiply(_smIdleQ);
+      }
+      if(_b['Shin L']){
+        _smIdleE.set(Math.sin(t*0.47+2.1)*0.045+Math.sin(t*0.23)*0.02,0,0);
+        _smIdleQ.setFromEuler(_smIdleE);
+        _b['Shin L'].quaternion.copy(_b['Shin L'].userData._rq).multiply(_smIdleQ);
+      }
       requestAnimationFrame(titleOrbit);
     }
     requestAnimationFrame(titleOrbit);
@@ -10110,10 +10314,20 @@ function titleLoadGame(){
         _showTitleMenu();
       }
     }, 1300);
-    // Override startGame
+    // Override startGame — restore game room, hide title scene
     const _origStart=window.startGame;
     window.startGame=function(){
-      titleOrbiting=false; camOrbitX=0;
+      titleOrbiting=false; titleMode=false; camOrbitX=0;
+      camera.fov=66; camera.updateProjectionMatrix();
+      _titleGrp.visible=false;
+      room.visible=true;
+      character.visible=true;
+      // Restore post-processing
+      if(typeof post!=='undefined'){ post.vignette=_postVigSave; post.desaturate=_postDesSave; }
+      // Remove title drag/scroll listeners
+      const _cv=document.querySelector('canvas');
+      if(_cv){ _cv.removeEventListener('mousedown',_titleMD); _cv.removeEventListener('wheel',_titleWH); }
+      window.removeEventListener('mousemove',_titleMM); window.removeEventListener('mouseup',_titleMU);
       const ts=document.getElementById('title-screen');
       if(ts){ ts.style.opacity='0'; setTimeout(()=>{ ts.style.pointerEvents='none'; ts.style.display='none'; },1200); }
       if(_origStart) _origStart();
@@ -10325,21 +10539,17 @@ const PET_PROFILES = {
 window.PET_PROFILES = PET_PROFILES;
 const PET_WALK_FLOOR_Y = 0.018; // beta: slightly lower pet walking/idle baseline so GLBs sit on the floor
 const PET_INSPO_PETS_PER_POINT = 5;
-const PET_INSPO_COOLDOWN_MS = 60 * 1000;
 let petInspoPetCount = 0;
-let petInspoCooldownUntil = 0;
 function registerPettingInspo(){
-  const now=Date.now();
-  // Every pet interaction should visibly move inspiration, even during the 60s flag cooldown.
-  state.inspo = Math.min(100, (Number(state.inspo) || 0) + 4);
-  if(state.inspo >= 100 && !state.isComposing){ scheduleProductionRetry(250); }
-  if(now < petInspoCooldownUntil){ updateInspoBar(); updateStats(); saveState(); return; }
+  // Petting a few times grants inspiration, but is capped at ONE point per
+  // creation cycle: once didPet is set it can't be re-earned until the flags
+  // reset (i.e. after Slow Magic makes something). No raw inspo drip — so
+  // petting can never exceed a single activity point per cycle.
+  if(state.didPet){ updateInspoBar(); return; }
   petInspoPetCount++;
-  // The activity flag still completes after 5 pet interactions.
   updateInspoBar(); updateStats(); saveState();
   if(petInspoPetCount < PET_INSPO_PETS_PER_POINT) return;
   petInspoPetCount = 0;
-  petInspoCooldownUntil = now + PET_INSPO_COOLDOWN_MS;
   setInspoFlag('didPet');
   const notice=document.getElementById('inspo-notice');
   if(notice){
@@ -12570,7 +12780,7 @@ canvasEl.addEventListener('touchmove',(e)=>{
 }, {passive:false, capture:true});
 
 updateCameraFeel = function(dt){
-  if(camAnimating||camOverride)return;
+  if(titleMode||camAnimating||camOverride)return;
 
   // Follow camera with full orbit/rotation control around Slow Magic.
   // Only clamp the closest distance so zoom cannot clip into the body.
@@ -16478,16 +16688,248 @@ if(typeof _origPlayCD==='function'){
   };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTROLLER SUPPORT — Gamepad API (works with Xbox / PS / Switch / generic)
+// ═══════════════════════════════════════════════════════════════════════════
+(function(){
+  // ── Gamepad manager ─────────────────────────────────────────────────────
+  const GP = {
+    pad: null,
+    type: 'generic', // 'xbox' | 'ps' | 'switch' | 'generic'
+    axes: [0,0,0,0],
+    btns: [],
+    prev: [],
+    // Standard Gamepad layout indices
+    B: { SOUTH:0,EAST:1,WEST:2,NORTH:3,L1:4,R1:5,L2:6,R2:7,
+         SELECT:8,START:9,L3:10,R3:11,UP:12,DOWN:13,LEFT:14,RIGHT:15 },
+
+    detect(id){
+      if(/054c|playstation|dualsense|dualshock/i.test(id)) this.type='ps';
+      else if(/045e|xinput|xbox|microsoft/i.test(id)) this.type='xbox';
+      else if(/057e|nintendo|joy.con|switch/i.test(id)) this.type='switch';
+      else this.type='generic';
+    },
+
+    connect(e){
+      this.pad=e.gamepad; this.detect(e.gamepad.id);
+      CURSOR.show();
+      console.log('[GP] connected:', e.gamepad.id, '→', this.type);
+    },
+    disconnect(){ this.pad=null; CURSOR.hide(); },
+
+    update(){
+      if(!this.pad){
+        const pads=navigator.getGamepads?navigator.getGamepads():[];
+        for(const p of pads){ if(p&&p.connected){this.pad=p;this.detect(p.id);CURSOR.show();break;} }
+      }
+      if(!this.pad) return;
+      const fresh=(navigator.getGamepads())[this.pad.index];
+      if(fresh) this.pad=fresh;
+      this.prev=this.btns.slice();
+      this.btns=Array.from(this.pad.buttons).map(b=>typeof b==='object'?b.pressed:b>0.5);
+      const DEAD=0.14;
+      this.axes=Array.from(this.pad.axes).map(a=>Math.abs(a)<DEAD?0:a);
+    },
+
+    pressed(i){ return !!this.btns[i]&&!this.prev[i]; },
+    held(i)   { return !!this.btns[i]; },
+
+    // Button label glyphs per controller family
+    _glyphs:{
+      ps:     {SOUTH:'✕',EAST:'○',WEST:'□',NORTH:'△',L1:'L1',R1:'R1',L2:'L2',R2:'R2',START:'OPTIONS',SELECT:'SHARE'},
+      xbox:   {SOUTH:'A',EAST:'B',WEST:'X',NORTH:'Y',L1:'LB',R1:'RB',L2:'LT',R2:'RT',START:'MENU',SELECT:'VIEW'},
+      switch: {SOUTH:'B',EAST:'A',WEST:'Y',NORTH:'X',L1:'L',R1:'R',L2:'ZL',R2:'ZR',START:'+',SELECT:'−'},
+      generic:{SOUTH:'①',EAST:'②',WEST:'③',NORTH:'④',L1:'L1',R1:'R1',L2:'L2',R2:'R2',START:'START',SELECT:'SELECT'},
+    },
+    glyph(action){ return (this._glyphs[this.type]||this._glyphs.generic)[action]||action; },
+  };
+
+  window.addEventListener('gamepadconnected',    e=>GP.connect(e));
+  window.addEventListener('gamepaddisconnected', ()=>GP.disconnect());
+
+  // ── Controller cursor ────────────────────────────────────────────────────
+  const CURSOR = (function(){
+    const el=document.createElement('div');
+    el.id='gp-cursor';
+    el.style.cssText=[
+      'position:fixed','z-index:9998','pointer-events:none','display:none',
+      'transform:translate(-2px,-2px)',   // hotspot at arrow tip
+      'transition:opacity .12s',
+    ].join(';');
+    // Retro pixel-art arrow cursor — drawn as stacked rects for authentic pixel look
+    el.innerHTML=`<svg width="26" height="32" viewBox="0 0 13 16" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated;shape-rendering:crispEdges;display:block">
+      <!-- Shadow layer (+1,+1 offset) -->
+      <polygon points="1,1 1,14 4,11 6,15 8,14 6,9 11,9" fill="#0a0618"/>
+      <!-- Main fill -->
+      <polygon points="0,0 0,13 3,10 5,14 7,13 5,8 10,8" fill="#e8d5b0"/>
+      <!-- Left-edge highlight strip -->
+      <rect x="0" y="0" width="1" height="8" fill="#ffffff" opacity="0.55"/>
+    </svg>`;
+    document.body.appendChild(el);
+
+    let x=window.innerWidth/2, y=window.innerHeight/2, vis=false;
+
+    function _pos(){ el.style.left=x+'px'; el.style.top=y+'px'; }
+    _pos();
+
+    return {
+      show(){ if(!vis){ vis=true; el.style.display='block'; } },
+      hide(){ if(vis){ vis=false; el.style.display='none'; } },
+      get visible(){ return vis; },
+      move(dx,dy){
+        x=Math.max(0,Math.min(window.innerWidth,x+dx));
+        y=Math.max(0,Math.min(window.innerHeight,y+dy));
+        _pos();
+        // Fire synthetic mousemove so hover highlights follow cursor
+        const target=document.elementFromPoint(x,y);
+        if(target) target.dispatchEvent(new MouseEvent('mousemove',{bubbles:true,clientX:x,clientY:y,cancelable:true}));
+      },
+      click(){
+        const target=document.elementFromPoint(x,y);
+        const mainCanvas=document.getElementById('canvas'); // the 3-D scene canvas
+        const mo={bubbles:true,cancelable:true,clientX:x,clientY:y,view:window,button:0};
+        const po={...mo,pointerId:1,pointerType:'mouse',isPrimary:true,width:1,height:1,pressure:0.5};
+        // Full pointer + mouse + click sequence so BOTH pointerdown-based
+        // handlers (synth keys, mini-game canvases) and click-based handlers
+        // (buttons, 3-D raycaster) respond to the on-screen cursor.
+        const fireSeq=(el)=>{
+          if(!el) return;
+          try{ el.dispatchEvent(new PointerEvent('pointerdown',po)); }catch(e){}
+          el.dispatchEvent(new MouseEvent('mousedown',mo));
+          try{ el.dispatchEvent(new PointerEvent('pointerup',po)); }catch(e){}
+          el.dispatchEvent(new MouseEvent('mouseup',mo));
+          el.dispatchEvent(new MouseEvent('click',mo));
+        };
+        if(target===mainCanvas || !target){
+          // Over the 3-D scene → poke the canvas (raycaster + any pointer handlers)
+          fireSeq(mainCanvas);
+        } else {
+          // Over a DOM/overlay element → click it directly (no click-through to scene)
+          fireSeq(target);
+        }
+      },
+      getX(){ return x; }, getY(){ return y; },
+    };
+  })();
+
+  window._gpCursor=CURSOR; // expose for external use
+  window._GP=GP;           // expose for glyphs etc.
+
+  // ── Per-frame update (hooked into rAF) ───────────────────────────────────
+  const CURSOR_SPEED = 680;  // px / sec at full stick deflection
+  const CAM_STICK_SPD = 1.8; // orbit units / sec at full deflection
+  const DPAD_STEP = 14;       // px per dpad press-repeat tick
+
+  let _dpadRepeat={UP:0,DOWN:0,LEFT:0,RIGHT:0};
+  const DPAD_INIT=0.38, DPAD_RPT=0.09; // initial delay then repeat interval (sec)
+
+  let _gpLastT=performance.now();
+  let _southWasHeld=false;
+
+  // Analog value (0..1) of a button regardless of GamepadButton-object / number form
+  function _btnVal(i){
+    const b=GP.pad&&GP.pad.buttons[i];
+    if(b==null) return 0;
+    return typeof b==='object' ? (b.value||0) : (typeof b==='number'?b:0);
+  }
+
+  function gpTick(){
+    requestAnimationFrame(gpTick);
+    GP.update();
+    if(!GP.pad) return;
+
+    const now=performance.now();
+    const dt=Math.min(0.05,(now-_gpLastT)/1000);
+    _gpLastT=now;
+
+    const {B}=GP;
+    const dKeys=['UP','DOWN','LEFT','RIGHT'];
+    const dDirs={UP:[0,-1],DOWN:[0,1],LEFT:[-1,0],RIGHT:[1,0]};
+    const dBtns={UP:B.UP,DOWN:B.DOWN,LEFT:B.LEFT,RIGHT:B.RIGHT};
+
+    // ── Mini-game input routing — the pad drives the open game, not the cursor ──
+    const drumActive   = (typeof drumGame!=='undefined')    && drumGame    && drumGame.active;
+    const tetrisActive = (typeof gameboyGame!=='undefined') && gameboyGame && gameboyGame.active;
+
+    if(drumActive && typeof drumHit==='function'){
+      // dpad LEFT / RIGHT → matching lane; other dpad dirs → LEFT lane; face buttons → RIGHT lane
+      if(GP.pressed(B.LEFT)||GP.pressed(B.UP)||GP.pressed(B.DOWN)) drumHit('L');
+      if(GP.pressed(B.RIGHT)) drumHit('R');
+      if(GP.pressed(B.SOUTH)||GP.pressed(B.EAST)||GP.pressed(B.WEST)||GP.pressed(B.NORTH)) drumHit('R');
+      return;
+    }
+
+    if(tetrisActive){
+      // dpad L/R move (press + auto-repeat), UP hard drop, DOWN soft drop, face buttons rotate
+      const rep=(k,fn)=>{
+        if(!GP.held(dBtns[k])){ _dpadRepeat[k]=0; return; }
+        if(GP.pressed(dBtns[k])){ fn(); _dpadRepeat[k]=0; return; }
+        _dpadRepeat[k]+=dt;
+        if(_dpadRepeat[k]>=DPAD_INIT){ fn(); _dpadRepeat[k]=DPAD_INIT-DPAD_RPT; }
+      };
+      if(typeof gbMove==='function') rep('LEFT', ()=>gbMove(-1));
+      if(typeof gbMove==='function') rep('RIGHT',()=>gbMove(1));
+      if(typeof gbSoftDrop==='function') rep('DOWN', gbSoftDrop);
+      if(GP.pressed(B.UP) && typeof gbHardDrop==='function') gbHardDrop();
+      if((GP.pressed(B.SOUTH)||GP.pressed(B.EAST)||GP.pressed(B.WEST)||GP.pressed(B.NORTH)) && typeof gbRotate==='function') gbRotate();
+      return;
+    }
+
+    // ── Cursor movement: left stick + dpad ──────────────────────────────
+    let dx=GP.axes[0]*CURSOR_SPEED*dt;
+    let dy=GP.axes[1]*CURSOR_SPEED*dt;
+
+    // Dpad with initial delay + repeat
+    for(const k of dKeys){
+      if(GP.held(dBtns[k])){
+        _dpadRepeat[k]+=dt;
+        const thresh=_dpadRepeat[k]<DPAD_INIT*2?DPAD_INIT:DPAD_RPT;
+        if(_dpadRepeat[k]>=thresh){
+          _dpadRepeat[k]-=thresh;
+          dx+=dDirs[k][0]*DPAD_STEP;
+          dy+=dDirs[k][1]*DPAD_STEP;
+        }
+      } else {
+        _dpadRepeat[k]=0;
+      }
+    }
+
+    if(dx||dy) CURSOR.move(dx,dy);
+
+    // ── SOUTH button → click ─────────────────────────────────────────────
+    if(GP.pressed(B.SOUTH)) CURSOR.click();
+
+    // ── Right stick → camera orbit (only during gameplay) ────────────────
+    if(typeof titleMode!=='undefined'&&!titleMode){
+      const rx=GP.axes[2], ry=GP.axes[3];
+      if(Math.abs(rx)>0||Math.abs(ry)>0){
+        if(typeof camOrbitX!=='undefined'){
+          camOrbitX=(camOrbitX||0)+rx*CAM_STICK_SPD*dt;
+          camOrbitY=(camOrbitY||0)-ry*CAM_STICK_SPD*dt*0.6; // inverted Y: stick up = camera up
+        }
+      }
+      // ── L2 / R2 triggers → zoom in / out ─────────────────────────────
+      const l2=_btnVal(B.L2), r2=_btnVal(B.R2);
+      const zoomDelta=(r2-l2)*4.0*dt;
+      if(Math.abs(zoomDelta)>0.0005&&typeof camZoom!=='undefined'&&typeof CAM_ZOOM_MIN!=='undefined'){
+        camZoom=Math.max(CAM_ZOOM_MIN,Math.min(CAM_ZOOM_MAX,camZoom+zoomDelta));
+      }
+    }
+  }
+  requestAnimationFrame(gpTick);
+
+})();
+
 </script>
 
 <!-- First-play popup overlay -->
 <div id="firstplay-overlay" style="display:none;position:fixed;inset:0;z-index:900;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);">
-  <div id="firstplay-panel" style="position:relative;max-width:320px;width:90vw;image-rendering:pixelated;cursor:pointer;" onclick="closeFirstPlayPopup()">
+  <div id="firstplay-panel" style="position:relative;max-width:min(560px,94vw);width:94vw;image-rendering:pixelated;cursor:pointer;" onclick="closeFirstPlayPopup()">
     <img id="firstplay-img" src="" alt="" style="width:100%;display:block;image-rendering:pixelated;"/>
-    <div id="firstplay-fallback" style="display:none;background:#1a1228;border:2px solid #c0a8d8;padding:28px 24px;font-family:'Pixellari',monospace;color:#e8d5b0;text-align:center;">
-      <div id="firstplay-title" style="font-size:13px;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:12px;"></div>
-      <div id="firstplay-body" style="font-size:9px;letter-spacing:0.1em;line-height:1.7;opacity:0.8;"></div>
-      <div style="margin-top:16px;font-size:8px;opacity:0.5;letter-spacing:0.14em;">tap to continue</div>
+    <div id="firstplay-fallback" style="display:none;background:#1a1228;border:2px solid #c0a8d8;padding:38px 34px;font-family:'Pixellari',monospace;color:#e8d5b0;text-align:center;">
+      <div id="firstplay-title" style="font-size:19px;letter-spacing:0.22em;text-transform:uppercase;margin-bottom:18px;"></div>
+      <div id="firstplay-body" style="font-size:13px;letter-spacing:0.1em;line-height:1.75;opacity:0.85;"></div>
+      <div style="margin-top:22px;font-size:11px;opacity:0.5;letter-spacing:0.14em;">tap to continue</div>
     </div>
   </div>
 </div>
@@ -16504,7 +16946,7 @@ const _firstPlayFallback = {
   synthgame: {title:'SYNTH MIDI GAME', body:'Use the Left, Up, and Right arrow keys to play the three notes. Try to beat all three songs.'},
   drum:      {title:'DRUM SESSION', body:'Use the Left and Right arrow keys to play the falling drum hits. Try to unlock and beat all 5 songs to unlock inspiration.'},
   cdplayer:  {title:'CD PLAYER', body:'Enjoy mixing and playing Slow Magic’s new songs. Change the speed, reverb, and mix for the four parts on each song.'},
-  gameboy:   {title:'SLOWTRIS', body:'Left Right to move block. Up to rotate. Clear 10 lines for a prize!'},
+  gameboy:   {title:'SLOWTRIS', body:'Left/Right to move. Z or X to rotate. Up to drop. Clear 10 lines for a prize!'},
 };
 function showFirstPlayPopup(key){
   if(_firstPlayShown[key]) return;
