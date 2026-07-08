@@ -7140,22 +7140,33 @@ let lastSleepHourBucket=-1;
 let productionStartGuardTimer=0;
 let pendingProductionRetryTimer=0;
 let prodRetryCount=0;
+let productionPending=false;
 function hasDedicatedTask(){ return !!dedicatedTask; }
 function beginDedicatedTask(name){ dedicatedTask=name||'task'; actionLocked=true; if(window.logAction) logAction('dedicated task → '+dedicatedTask); }
 function endDedicatedTask(name=''){ if(!name || dedicatedTask===name) dedicatedTask=''; actionLocked=false; }
 function clearProductionStartGuard(){ if(productionStartGuardTimer){ clearTimeout(productionStartGuardTimer); productionStartGuardTimer=0; } }
 function clearPendingProductionRetry(){ if(pendingProductionRetryTimer){ clearTimeout(pendingProductionRetryTimer); pendingProductionRetryTimer=0; } }
+function recoverStaleProductionActionLock(){
+  if(!actionLocked || hasDedicatedTask() || pendingAction || charState!=='idle') return false;
+  if((window.cdp && cdp.open) || (typeof synthOpen!=='undefined' && synthOpen)) return false;
+  actionLocked=false;
+  console.warn('[SM] cleared stale action lock so pending production can start');
+  return true;
+}
 function scheduleProductionRetry(delay=800){
+  productionPending=true;
+  window.__smProductionPending=true;
   clearPendingProductionRetry();
   pendingProductionRetryTimer=setTimeout(function retryProductionMode(){
     pendingProductionRetryTimer=0;
-    if(state.isComposing){ prodRetryCount=0; return; }
+    if(state.isComposing){ productionPending=false; window.__smProductionPending=false; prodRetryCount=0; return; }
     // Wake the character before trying to compose — can't walk from sleep pose
     if(charState==='sleeping' || charState==='waking' || !state.isAwake){
       wakeFromSleep(true);
       scheduleProductionRetry(700);
       return;
     }
+    if(actionLocked) recoverStaleProductionActionLock();
     if(hasDedicatedTask() || pendingAction || charState==='walking' || actionLocked){
       prodRetryCount++;
       if(prodRetryCount===10 || prodRetryCount%25===0){
@@ -8764,12 +8775,7 @@ function checkInspirationConditions(){
   const flags=[state.didCD,state.didVHS,state.didGame,state.didClean,state.didSleep,state.didDrum,state.didSynth,state.didPet];
   const score=flags.filter(Boolean).length;
   updateInspoBar();
-  if(score>=3){
-    state.didCD=false; state.didVHS=false; state.didGame=false;
-    state.didClean=false; state.didSleep=false; state.didDrum=false; state.didSynth=false; state.didPet=false;
-    state.trashCleaned=0;
-    petInspoPetCount=0; // new cycle → petting must build up again
-    clearAllTimedInspo();
+  if(score>=3 && !productionPending){
     scheduleProductionRetry(800);
   }
 }
@@ -8855,9 +8861,21 @@ function showInspoBar(){
 
 function triggerProductionMode(){
   window._smLastProductionTime=Date.now();
-  if(state.isComposing || hasDedicatedTask()) return;
+  if(state.isComposing) return;
+  if(hasDedicatedTask()){
+    scheduleProductionRetry(700);
+    return;
+  }
+  productionPending=false;
+  window.__smProductionPending=false;
   clearPendingProductionRetry();
   state.isComposing=true;
+  state.didCD=false; state.didVHS=false; state.didGame=false;
+  state.didClean=false; state.didSleep=false; state.didDrum=false; state.didSynth=false; state.didPet=false;
+  state.trashCleaned=0;
+  petInspoPetCount=0; // new cycle -> petting must build up again
+  clearAllTimedInspo();
+  updateInspoBar();
   clearProductionStartGuard();
   beginDedicatedTask('produce');
   // flash inspiration notice
@@ -8897,6 +8915,8 @@ function triggerProductionMode(){
 function finishProduction(){
   clearProductionStartGuard();
   clearPendingProductionRetry();
+  productionPending=false;
+  window.__smProductionPending=false;
   state.isComposing=false;
   actionLocked=false;
   state.disks++;
